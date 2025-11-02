@@ -34,6 +34,33 @@ export async function registerUserController(request, response) {
         user = await UserModel.findOne({ email: email });
 
         if (user) {
+            if (user.verify_email !== true) {
+                const saltExisting = await bcryptjs.genSalt(10);
+                const hashPasswordExisting = await bcryptjs.hash(password, saltExisting);
+
+                const verifyCodeExisting = Math.floor(100000 + Math.random() * 900000).toString();
+
+                user.name = name;
+                user.password = hashPasswordExisting;
+                user.otp = verifyCodeExisting;
+                user.otpExpires = Date.now() + 600000;
+
+                await user.save();
+
+                await sendEmailFun({
+                    sendTo: email,
+                    subject: "Verify email to register in the Indian Baazaar",
+                    text: "Verify email to register in the Indian Baazaar",
+                    html: VerificationEmail(name, verifyCodeExisting)
+                })
+
+                return response.status(200).json({
+                    success: true,
+                    error: false,
+                    message: "Verification email resent. Please check your inbox to verify your account.",
+                });
+            }
+
             return response.json({
                 message: "User already Registered with this email",
                 error: true,
@@ -53,7 +80,6 @@ export async function registerUserController(request, response) {
             name: name,
             otp: verifyCode,
             otpExpires: Date.now() + 600000,
-
         });
 
         await user.save();
@@ -65,19 +91,10 @@ export async function registerUserController(request, response) {
             html: VerificationEmail(name, verifyCode)
         })
 
-
-        // Create a JWT token for verification purposes
-        const token = jwt.sign(
-            { email: user.email, id: user._id },
-            process.env.JSON_WEB_TOKEN_SECRET_KEY
-        );
-
-
         return response.status(200).json({
             success: true,
             error: false,
-            message: "User registered successfully! ",
-            token: token, // Optional: include this if needed for verification
+            message: "Verification email sent. Please check your inbox to verify your account.",
         });
 
 
@@ -108,7 +125,37 @@ export async function verifyEmailController(request, response) {
             user.otp = null;
             user.otpExpires = null;
             await user.save();
-            return response.status(200).json({ error: false, success: true, message: "Email verified successfully" });
+
+            const accesstoken = await generatedAccessToken(user._id);
+            const refreshToken = await genertedRefreshToken(user._id);
+
+            await UserModel.findByIdAndUpdate(user?._id, {
+                last_login_date: new Date()
+            })
+
+            const cookiesOption = {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None"
+            }
+            response.cookie('accessToken', accesstoken, cookiesOption)
+            response.cookie('refreshToken', refreshToken, cookiesOption)
+
+            return response.status(200).json({
+                error: false,
+                success: true,
+                message: "Email verified successfully",
+                data: {
+                    user: {
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        avatar: user.avatar,
+                    },
+                    accesstoken,
+                    refreshToken
+                }
+            });
         } else if (!isCodeValid) {
             return response.status(400).json({ error: true, success: false, message: "Invalid OTP" });
         } else {
@@ -126,7 +173,7 @@ export async function verifyEmailController(request, response) {
 
 
 export async function authWithGoogle(request, response) {
-    const { name, email, password, avatar, mobile, role } = request.body;
+    const { name, email, avatar, mobile, role } = request.body;
 
     try {
         const existingUser = await UserModel.findOne({ email: email });
@@ -136,7 +183,7 @@ export async function authWithGoogle(request, response) {
                 name: name,
                 mobile: mobile,
                 email: email,
-                password: "null",
+                password: null,
                 avatar: avatar,
                 role: role,
                 verify_email: true,
@@ -292,11 +339,9 @@ export async function loginUserController(request, response) {
 
 
 
-//logout controller
 export async function logoutController(request, response) {
     try {
-        const userid = request.userId //middleware
-
+        const userid = request.userId 
         const cookiesOption = {
             httpOnly: true,
             secure: true,
@@ -306,7 +351,7 @@ export async function logoutController(request, response) {
         response.clearCookie("accessToken", cookiesOption)
         response.clearCookie("refreshToken", cookiesOption)
 
-        const removeRefreshToken = await UserModel.findByIdAndUpdate(userid, {
+       await UserModel.findByIdAndUpdate(userid, {
             refresh_token: ""
         })
 
@@ -325,13 +370,12 @@ export async function logoutController(request, response) {
 }
 
 
-//image upload
 var imagesArr = [];
 export async function userAvatarController(request, response) {
     try {
         imagesArr = [];
 
-        const userId = request.userId;  //auth middleware
+        const userId = request.userId; 
         const image = request.files;
 
 
@@ -552,7 +596,8 @@ export async function verifyForgotPasswordOtp(request, response) {
         }
 
 
-        const currentTime = new Date().toISOString()
+        // otpExpires is stored as a Date; compare numeric timestamp values
+        const currentTime = Date.now();
 
         if (user.otpExpires < currentTime) {
             return response.status(400).json({
