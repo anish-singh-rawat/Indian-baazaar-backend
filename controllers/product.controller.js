@@ -8,9 +8,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 cloudinary.config({
-    cloud_name: process.env.cloudinary_Config_Cloud_Name,
-    api_key: process.env.cloudinary_Config_api_key,
-    api_secret: process.env.cloudinary_Config_api_secret,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
     secure: true,
 });
 
@@ -57,7 +57,7 @@ var bannerImage = [];
 export async function uploadBannerImages(request, response) {
     try {
         bannerImage = [];
-
+        console.log("request.files : ",request.files);
         const image = request.files;
 
         const options = {
@@ -67,8 +67,7 @@ export async function uploadBannerImages(request, response) {
         };
 
         for (let i = 0; i < image?.length; i++) {
-
-            const img = await cloudinary.uploader.upload(
+         await cloudinary.uploader.upload(
                 image[i].path,
                 options,
                 function (error, result) {
@@ -817,7 +816,6 @@ export async function deleteProduct(request, response) {
         }
     
         const images = product?.images;
-    
         let img = "";
         for (img of images) {
             const imgUrl = img;
