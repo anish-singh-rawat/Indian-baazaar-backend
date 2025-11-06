@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../models/user.model.js"; 
+import dotenv from 'dotenv';
+dotenv.config();
 
 const adminAuth = async (req, res, next) => {
   try {

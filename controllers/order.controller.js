@@ -4,6 +4,8 @@ import UserModel from '../models/user.model.js';
 import paypal from "@paypal/checkout-server-sdk";
 import OrderConfirmationEmail from "../utils/orderEmailTemplate.js";
 import sendEmailFun from "../config/sendEmail.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const createOrderController = async (request, response) => {
     try {

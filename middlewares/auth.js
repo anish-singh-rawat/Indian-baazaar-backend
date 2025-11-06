@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv';
+dotenv.config();
 
 const auth = async(request,response,next)=>{
     try {
@@ -14,7 +16,7 @@ const auth = async(request,response,next)=>{
             })
         }
 
-        const decode = await jwt.verify(token,process.env.SECRET_KEY_ACCESS_TOKEN);
+        const decode =  jwt.verify(token,process.env.SECRET_KEY_ACCESS_TOKEN);
 
         if(!decode){
             return response.status(401).json({
@@ -29,7 +31,7 @@ const auth = async(request,response,next)=>{
         next();
 
     } catch (error) {
-        console.log("error : ",error);
+        console.log("error : hai ",error);
         return response.status(500).json({
             message : "Invaliad Token",
             error : true,

@@ -1,12 +1,10 @@
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const generatedAccessToken = async (userId) => {
-    const token = await jwt.sign(
-        { id: userId },
-        process.env.SECRET_KEY_ACCESS_TOKEN
-    )
+  const token = jwt.sign({ id: userId }, process.env.SECRET_KEY_ACCESS_TOKEN);
+  return token;
+};
 
-    return token
-}
-
-export default generatedAccessToken
+export default generatedAccessToken;

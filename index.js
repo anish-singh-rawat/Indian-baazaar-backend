@@ -34,12 +34,26 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }))
 
-
-app.get("/", (request, response) => {
-    response.json({
-        message: "Server is running " + process.env.PORT
+try {
+    app.get("/", (request, response) => {
+        response.json({
+            message: "Server is running " + process.env.PORT,
+            error: false,
+            success: true,
+            server : "indianbaazaar"
+        })
     })
-})
+    
+} catch (error) {
+    console.error("Error occurred:", error);
+    response.status(500).json({
+        message: "Internal Server Error",
+        error: true,
+        success: false,
+        server : "indianbaazaar",
+        serverError : error.message || error
+    });
+}
 
 
 app.use('/api/user',userRouter)
@@ -58,6 +72,6 @@ app.use("/api/logo",logoRouter)
 
 connectDB().then(() => {
     app.listen(process.env.PORT, () => {
-        console.log("Server is running", process.env.PORT);
+        console.log(`Server is running http://localhost:${process.env.PORT}`);
     })
 })

@@ -5,10 +5,11 @@ import sendEmailFun from "../config/sendEmail.js";
 import VerificationEmail from "../utils/verifyEmailTemplate.js";
 import generatedAccessToken from "../utils/generatedAccessToken.js";
 import genertedRefreshToken from "../utils/generatedRefreshToken.js";
-
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import ReviewModel from "../models/reviews.model.js.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 cloudinary.config({
   cloud_name: process.env.cloudinary_Config_Cloud_Name,

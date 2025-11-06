@@ -2,11 +2,10 @@ import ProductModel from '../models/product.modal.js';
 import ProductRAMSModel from '../models/productRAMS.js';
 import ProductWEIGHTModel from '../models/productWEIGHT.js';
 import ProductSIZEModel from '../models/productSIZE.js';
-
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
-import { request } from 'http';
-
+import dotenv from 'dotenv';
+dotenv.config();
 
 cloudinary.config({
     cloud_name: process.env.cloudinary_Config_Cloud_Name,
@@ -16,7 +15,6 @@ cloudinary.config({
 });
 
 
-//image upload
 var imagesArr = [];
 export async function uploadImages(request, response) {
     try {
@@ -808,51 +806,55 @@ export async function getAllProductsBanners(request, response) {
 
 //delete product
 export async function deleteProduct(request, response) {
-
-    const product = await ProductModel.findById(request.params.id).populate("category");
-
-    if (!product) {
-        return response.status(404).json({
-            message: "Product Not found",
+    try {    
+        const product = await ProductModel.findById(request.params.id).populate("category");
+        if (!product) {
+            return response.status(404).json({
+                message: "Product Not found",
+                error: true,
+                success: false
+            })
+        }
+    
+        const images = product?.images;
+    
+        let img = "";
+        for (img of images) {
+            const imgUrl = img;
+            const urlArr = imgUrl.split("/");
+            const image = urlArr[urlArr.length - 1];
+    
+            const imageName = image.split(".")[0];
+    
+            if (imageName) {
+                cloudinary.uploader.destroy(imageName, (error, result) => {
+                });
+            }
+        }
+    
+        const deletedProduct = await ProductModel.findByIdAndDelete(request.params.id);
+    
+        if (!deletedProduct) {
+            response.status(404).json({
+                message: "Product not deleted!",
+                success: false,
+                error: true
+            });
+        }
+    
+        return response.status(200).json({
+            success: true,
+            error: false,
+            message: "Product Deleted!",
+        });
+    } catch (error) {
+        console.log("Error : ",error);
+        return response.status(500).json({
+            message: error.message || error,
             error: true,
             success: false
         })
     }
-
-    const images = product.images;
-
-    let img = "";
-    for (img of images) {
-        const imgUrl = img;
-        const urlArr = imgUrl.split("/");
-        const image = urlArr[urlArr.length - 1];
-
-        const imageName = image.split(".")[0];
-
-        if (imageName) {
-            cloudinary.uploader.destroy(imageName, (error, result) => {
-                // console.log(error, result);
-            });
-        }
-
-
-    }
-
-    const deletedProduct = await ProductModel.findByIdAndDelete(request.params.id);
-
-    if (!deletedProduct) {
-        response.status(404).json({
-            message: "Product not deleted!",
-            success: false,
-            error: true
-        });
-    }
-
-    return response.status(200).json({
-        success: true,
-        error: false,
-        message: "Product Deleted!",
-    });
 }
 
 
