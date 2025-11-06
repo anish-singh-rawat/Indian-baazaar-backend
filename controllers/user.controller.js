@@ -8,14 +8,14 @@ import genertedRefreshToken from "../utils/generatedRefreshToken.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import ReviewModel from "../models/reviews.model.js.js";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
 });
 
 export async function registerUserController(request, response) {
@@ -258,7 +258,6 @@ export async function authWithGoogle(request, response) {
   }
 }
 
-
 export async function loginAdminController(req, res) {
   try {
     const { email, password } = req.body;
@@ -343,7 +342,6 @@ export async function loginAdminController(req, res) {
     });
   }
 }
-
 
 export async function loginUserController(request, response) {
   try {
@@ -475,12 +473,17 @@ export async function userAvatarController(request, response) {
     const imageName = avatar_image.split(".")[0];
 
     if (imageName) {
-      const res = await cloudinary.uploader.destroy(
-        imageName,
-        (error, result) => {
-          console.log(error, result)
+      await cloudinary.uploader.destroy(imageName, (error, result) => {
+        console.log("Cloudinary Upload Error: ", error);
+        if (error) {
+          return response.status(500).json({
+            message: error.message || error,
+            error: true,
+            success: false,
+          });
         }
-      );
+        console.log("result: ", result);
+      });
     }
 
     const options = {
@@ -494,7 +497,15 @@ export async function userAvatarController(request, response) {
         image[i].path,
         options,
         function (error, result) {
-          console.log("error : ",error);
+          console.log("error : ", error);
+          if (error) {
+            console.log("Cloudinary Upload Error: ", error);
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
           imagesArr.push(result.secure_url);
           fs.unlinkSync(`uploads/${request.files[i].filename}`);
         }
@@ -520,25 +531,32 @@ export async function userAvatarController(request, response) {
 export async function removeImageFromCloudinary(request, response) {
   try {
     const imgUrl = request.query.img;
-  
+
     const urlArr = imgUrl.split("/");
     const image = urlArr[urlArr.length - 1];
-  
+
     const imageName = image.split(".")[0];
-  
+
     if (imageName) {
       const res = await cloudinary.uploader.destroy(
         imageName,
         (error, result) => {
-          console.log(error, result);
+          console.log("Cloudinary Upload Error: ", error);
+          if (error) {
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
+          console.log("result: ", result);
         }
       );
-  
+
       if (res) {
         response.status(200).send(res);
       }
     }
-  
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,

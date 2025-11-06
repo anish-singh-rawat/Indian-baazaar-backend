@@ -25,11 +25,19 @@ export async function uploadImages(request, response) {
     };
 
     for (let i = 0; i < image?.length; i++) {
-       await cloudinary.uploader.upload(
+      await cloudinary.uploader.upload(
         image[i].path,
         options,
         function (error, result) {
-          console.log("error : ",error);
+          console.log("error : ", error);
+          if (error) {
+            console.log("Cloudinary Upload Error: ", error);
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
           imagesArr.push(result.secure_url);
           fs.unlinkSync(`uploads/${request.files[i].filename}`);
         }
@@ -147,7 +155,17 @@ export async function deleteBanner(request, response) {
       const image = urlArr[urlArr.length - 1];
       const imageName = image.split(".")[0];
       if (imageName) {
-        cloudinary.uploader.destroy(imageName, (error, result) => {});
+        cloudinary.uploader.destroy(imageName, (error, result) => {
+          console.log("Cloudinary Upload Error: ", error);
+          if (error) {
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
+          console.log("result: ", result);
+        });
       }
     }
 
@@ -177,39 +195,39 @@ export async function deleteBanner(request, response) {
 }
 
 export async function updatedBanner(request, response) {
-    try {
-        const banner = await BannerList2Model.findByIdAndUpdate(
-          request.params.id,
-          {
-            images: imagesArr.length > 0 ? imagesArr[0] : request.body.images,
-            catId: request.body.catId,
-            subCatId: request.body.subCatId,
-            thirdsubCatId: request.body.thirdsubCatId,
-          },
-          { new: true }
-        );
-      
-        if (!banner) {
-          return response.status(500).json({
-            message: "banner cannot be updated!",
-            success: false,
-            error: true,
-          });
-        }
-      
-        imagesArr = [];
-      
-        response.status(200).json({
-          error: false,
-          success: true,
-          banner: banner,
-          message: "banner updated successfully",
-        });
-    } catch (error) {
-        return response.status(500).json({
-          message: error.message || error,
-          error: true,
-          success: false,
-        });
+  try {
+    const banner = await BannerList2Model.findByIdAndUpdate(
+      request.params.id,
+      {
+        images: imagesArr.length > 0 ? imagesArr[0] : request.body.images,
+        catId: request.body.catId,
+        subCatId: request.body.subCatId,
+        thirdsubCatId: request.body.thirdsubCatId,
+      },
+      { new: true }
+    );
+
+    if (!banner) {
+      return response.status(500).json({
+        message: "banner cannot be updated!",
+        success: false,
+        error: true,
+      });
     }
+
+    imagesArr = [];
+
+    response.status(200).json({
+      error: false,
+      success: true,
+      banner: banner,
+      message: "banner updated successfully",
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
 }

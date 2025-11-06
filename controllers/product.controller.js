@@ -32,6 +32,14 @@ export async function uploadImages(request, response) {
         image[i].path,
         options,
         function (error, result) {
+          if (error) {
+            console.log("Cloudinary Upload Error: ", error);
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
           console.log("error : ", error);
           imagesArr.push(result.secure_url);
           fs.unlinkSync(`uploads/${request.files[i].filename}`);
@@ -70,6 +78,14 @@ export async function uploadBannerImages(request, response) {
         options,
         function (error, result) {
           console.log("error : ", error);
+          if (error) {
+            console.log("Cloudinary Upload Error: ", error);
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
           bannerImage.push(result.secure_url);
           fs.unlinkSync(`uploads/${request.files[i].filename}`);
         }
@@ -769,7 +785,17 @@ export async function deleteProduct(request, response) {
       const imageName = image.split(".")[0];
 
       if (imageName) {
-        cloudinary.uploader.destroy(imageName, (error, result) => {});
+        cloudinary.uploader.destroy(imageName, (error, result) => {
+          console.log("Cloudinary Upload Error: ", error);
+          if (error) {
+            return response.status(500).json({
+              message: error.message || error,
+              error: true,
+              success: false,
+            });
+          }
+          console.log("result: ", result);
+        });
       }
     }
 
@@ -826,7 +852,15 @@ export async function deleteMultipleProduct(request, response) {
 
         if (imageName) {
           cloudinary.uploader.destroy(imageName, (error, result) => {
-            console.log(error, result);
+            console.log("Cloudinary Upload Error: ", error);
+            if (error) {
+              return response.status(500).json({
+                message: error.message || error,
+                error: true,
+                success: false,
+              });
+            }
+            console.log("result: ", result);
           });
         }
       }
