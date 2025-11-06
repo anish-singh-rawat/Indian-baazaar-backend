@@ -20,8 +20,13 @@ import orderRouter from './route/order.route.js';
 import logoRouter from './route/logo.route.js';
 
 const app = express();
-app.use(cors());
-app.options('*', cors())
+app.use(cors({
+  origin: "http://localhost:5173",   // Vite Frontend URL
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+}));
+
 
 
 app.use(express.json())

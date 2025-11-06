@@ -7,7 +7,7 @@ export const addAddressController = async (request, response) => {
         const { address_line1, city, state, pincode, country, mobile, userId, landmark, addressType } = request.body;
 
 
-        if (!address_line1 || city || state || pincode || country || mobile || userId) {
+        if (!address_line1 || !city || !state || !pincode || !country || !mobile || !userId) {
             return response.status(500).json({
                 message: "Please provide all the fields",
                 error: true,
