@@ -31,7 +31,6 @@ const auth = async(request,response,next)=>{
         next();
 
     } catch (error) {
-        console.log("error : hai ",error);
         return response.status(500).json({
             message : "Invaliad Token",
             error : true,
