@@ -8,15 +8,15 @@ export async function getNotifications(request, response) {
       .sort({ createdAt: -1 })
       .populate('product'); 
     const mapped = notifications.map((n) => ({
-      _id: n._id,
-      title: n.title,
-      message: n.message,
-      read: n.read,
-      createdAt: n.createdAt,
-      updatedAt: n.updatedAt,
-      product: n.product || null,
-      productId: n.product ? n.product._id : null,
-      productImage: n.product && n.product.images && n.product.images.length > 0 ? n.product.images[0] : null,
+      _id: n?._id,
+      title: n?.title,
+      message: n?.message,
+      read: n?.read,
+      createdAt: n?.createdAt,
+      updatedAt: n?.updatedAt,
+      product: n?.product || null,
+      productId: n?.product ? n?.product._id : null,
+      productImage: n?.product && n?.product.images && n?.product.images.length > 0 ? n?.product.images[0] : null,
     }));
 
     return response.status(200).json({ error: false, success: true, notifications: mapped });
