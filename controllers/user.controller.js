@@ -636,7 +636,7 @@ export async function forgotPasswordController(request, response) {
       });
 
       return response.json({
-        message: "check your email",
+        message: "OTP sent, check your email",
         error: false,
         success: true,
       });
