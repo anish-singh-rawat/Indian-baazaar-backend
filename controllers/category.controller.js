@@ -322,7 +322,6 @@ export async function deleteCategory(request, response) {
 
 export async function updatedCategory(request, response) {
   try {
-    console.log(request.body.name);
     const category = await CategoryModel.findByIdAndUpdate(
       request.params.id,
       {
