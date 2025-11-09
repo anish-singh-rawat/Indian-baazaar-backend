@@ -32,7 +32,6 @@ export const createOrderController = async (request, response) => {
         for (let i = 0; i < request.body.products.length; i++) {
 
             const product = await ProductModel.findOne({ _id: request.body.products[i].productId })
-            console.log(product)
 
             await ProductModel.findByIdAndUpdate(
                 request.body.products[i].productId,
@@ -678,9 +677,6 @@ export const totalUsersController = async (request, response) => {
 export async function deleteOrder(request, response) {
     try {
         const order = await OrderModel.findById(request.params.id);
-
-        console.log(request.params.id)
-
         if (!order) {
             return response.status(404).json({
                 message: "Order Not found",

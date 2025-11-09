@@ -636,7 +636,7 @@ export async function forgotPasswordController(request, response) {
       });
 
       return response.json({
-        message: "check your email",
+        message: "OTP sent, check your email",
         error: false,
         success: true,
       });
@@ -655,9 +655,6 @@ export async function verifyForgotPasswordOtp(request, response) {
     const { email, otp } = request.body;
 
     const user = await UserModel.findOne({ email: email });
-
-    console.log(user);
-
     if (!user) {
       return response.status(400).json({
         message: "Email not available",
@@ -938,7 +935,6 @@ export async function getReviews(request, response) {
     const productId = request.query.productId;
 
     const reviews = await ReviewModel.find({ productId: productId });
-    console.log(reviews);
 
     if (!reviews) {
       return response.status(400).json({

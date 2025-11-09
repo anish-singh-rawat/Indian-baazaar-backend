@@ -137,8 +137,6 @@ export async function createProduct(request, response) {
 
     product = await product.save();
 
-    console.log(product);
-
     if (!product) {
       return response.status(500).json({
         error: true,
@@ -228,8 +226,6 @@ export async function getAllProductsByCatId(request, response) {
       });
     }
 
-    console.log("hmm ji request.params.id : ", request.params.id);
-
     const products = await ProductModel.find({
       catId: request.params.id,
     })
@@ -237,8 +233,6 @@ export async function getAllProductsByCatId(request, response) {
       .skip((page - 1) * perPage)
       .limit(perPage)
       .exec();
-
-    console.log("answer : ", products);
 
     if (!products) {
       response.status(500).json({
