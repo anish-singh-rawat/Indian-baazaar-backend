@@ -1,9 +1,9 @@
 // trackingController.js
 import axios from "axios";
-import { getShiprocketToken } from "../shiprocketAuth.js";
+import { getShiprocketToken } from "./shiprocketAuth.js";
 
 export const trackShipment = async (req, res) => {
-  const { awb } = req.params; // example: AWB number from frontend
+  const { awb } = req.params;
   try {
     const token = await getShiprocketToken();
 

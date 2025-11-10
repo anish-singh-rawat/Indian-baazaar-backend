@@ -1,6 +1,6 @@
 // controllers/shiprocketController.js
 import axios from "axios";
-import { getShiprocketToken } from "../shiprocketAuth.js";
+import { getShiprocketToken } from "./shiprocketAuth.js";
 
 const BASE = "https://apiv2.shiprocket.in/v1/external";
 
@@ -18,11 +18,9 @@ const sendReq = async (method, url, token, data = null, params = null) => {
     return axios(config);
 };
 
-// 1. serviceability
 export const checkServiceability = async (req, res) => {
     try {
         const token = await getShiprocketToken();
-        // expect query params: pickup_postcode, delivery_postcode, weight
         const response = await sendReq("get", `${BASE}/courier/serviceability/`, token, null, req.query);
         res.json(response.data);
     } catch (error) {

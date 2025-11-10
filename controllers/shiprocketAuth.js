@@ -1,11 +1,11 @@
-// shiprocketAuth.js
 import axios from "axios";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const AUTH_URL = "https://apiv2.shiprocket.in/v1/external/auth/login";
 
-// simple in-memory cache
 let cachedToken = null;
-let tokenExpiry = 0; // epoch ms
+let tokenExpiry = 0;
 
 export const getShiprocketToken = async () => {
   const now = Date.now();
@@ -19,13 +19,11 @@ export const getShiprocketToken = async () => {
       password: process.env.SHIPROCKET_PASSWORD,
     });
 
-    // response shape from Shiprocket: { token: 'xxx', expires_in: 864000 } (verify in your env)
     const token = resp.data.token || resp.data.data?.token || resp.data?.data?.token;
-    // fallback: token valid 240 hours (in ms)
     const ttlMs = (resp.data.expires_in ? Number(resp.data.expires_in) * 1000 : 240 * 60 * 60 * 1000);
 
     cachedToken = token;
-    tokenExpiry = Date.now() + ttlMs - 60 * 1000; // refresh 1 minute early
+    tokenExpiry = Date.now() + ttlMs - 60 * 1000; 
     return token;
   } catch (err) {
     console.error("Error generating Shiprocket token:", err.response?.data || err.message);

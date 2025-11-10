@@ -33,9 +33,9 @@ const adminAuth = async (req, res, next) => {
       });
     }
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "RETAILER" || user.role !== "SUPER_ADMIN") {
       return res.status(403).json({
-        message: "Permission denied: Admin access only",
+        message: "Permission denied",
         success: false,
       });
     }

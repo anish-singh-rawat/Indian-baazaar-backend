@@ -54,7 +54,7 @@ export async function createNotification(request, response) {
     const { title, message, productId } = request.body;
 
     const user = await UserModel.findById(userId).lean();
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || user.role !== 'RETAILER' || user.role !== 'SUPER_ADMIN' || user.role !== 'ADMIN') {
       return response.status(403).json({ message: 'Forbidden to user', error: true, success: false });
     }
 

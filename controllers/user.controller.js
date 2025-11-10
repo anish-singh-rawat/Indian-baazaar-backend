@@ -278,9 +278,9 @@ export async function loginAdminController(req, res) {
       });
     }
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "RETAILER" || user.role !== "SUPER_ADMIN" || user.role !== "ADMIN") {
       return res.status(403).json({
-        message: "Access denied, not an admin",
+        message: "Access denied",
         success: false,
       });
     }
