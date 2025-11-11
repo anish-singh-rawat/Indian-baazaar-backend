@@ -5,6 +5,7 @@ import ProductSIZEModel from "../models/productSIZE.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { buildRoleBasedFilter, canModifyResource } from "../utils/roleFilters.js";
 dotenv.config();
 
 import { createNotificationForAllUsers } from '../utils/notification.service.js';
@@ -133,6 +134,7 @@ export async function createProduct(request, response) {
       productRam: request.body.productRam,
       size: request.body.size,
       productWeight: request.body.productWeight,
+      createdBy: request.userId, // Track who created this product
     });
 
     product = await product.save();
@@ -174,14 +176,18 @@ export async function createProduct(request, response) {
 export async function getAllProducts(request, response) {
   try {
     const { page, limit } = request.query;
-    const totalProducts = await ProductModel.find();
+    
+    // Build role-based filter
+    const filter = buildRoleBasedFilter(request.user, {});
+    
+    const totalProducts = await ProductModel.find(filter);
 
-    const products = await ProductModel.find()
+    const products = await ProductModel.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const total = await ProductModel.countDocuments(products);
+    const total = await ProductModel.countDocuments(filter);
 
     if (!products) {
       return response.status(400).json({
@@ -779,6 +785,15 @@ export async function deleteProduct(request, response) {
       });
     }
 
+    // Check if user can modify this product
+    if (!canModifyResource(request.user, product)) {
+      return response.status(403).json({
+        message: "Permission denied: You can only delete your own products",
+        error: true,
+        success: false,
+      });
+    }
+
     const images = product?.images;
     let img = "";
     for (img of images) {
@@ -955,6 +970,26 @@ export async function removeImageFromCloudinary(request, response) {
 //updated product
 export async function updateProduct(request, response) {
   try {
+    // First fetch the product to check ownership
+    const existingProduct = await ProductModel.findById(request.params.id);
+    
+    if (!existingProduct) {
+      return response.status(404).json({
+        message: "Product not found",
+        error: true,
+        success: false,
+      });
+    }
+
+    // Check if user can modify this product
+    if (!canModifyResource(request.user, existingProduct)) {
+      return response.status(403).json({
+        message: "Permission denied: You can only modify your own products",
+        error: true,
+        success: false,
+      });
+    }
+
     const product = await ProductModel.findByIdAndUpdate(
       request.params.id,
       {

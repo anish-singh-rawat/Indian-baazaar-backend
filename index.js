@@ -20,6 +20,7 @@ import orderRouter from './route/order.route.js';
 import notificationRouter from './route/notification.route.js';
 import trackingRoutes from './route/trackingRoutes.js';
 import shiprocketRoutes from './route/shiprocketRoutes.js';
+import permissionRouter from './route/permission.route.js';
 
 const app = express();
 app.use(cors({
@@ -75,6 +76,7 @@ app.use("/api/blog",blogRouter)
 app.use("/api/order",orderRouter)
 app.use('/api/notification', notificationRouter)
 app.use('/api/shiprocket', shiprocketRoutes)
+app.use('/api/permission', permissionRouter)
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

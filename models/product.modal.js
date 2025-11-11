@@ -107,6 +107,11 @@ const productSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false, // Optional for backward compatibility with existing products
+    },
 },{
     timestamps : true
 });
