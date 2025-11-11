@@ -33,7 +33,7 @@ const adminAuth = async (req, res, next) => {
       });
     }
 
-    if (user.role !== "RETAILER" || user.role !== "SUPER_ADMIN") {
+    if (user.role !== "RETAILER" && user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
       return res.status(403).json({
         message: "Permission denied",
         success: false,
