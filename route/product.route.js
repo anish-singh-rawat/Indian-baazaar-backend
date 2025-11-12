@@ -11,7 +11,7 @@ const productRouter = Router();
 productRouter.post('/uploadImages', checkPermission({ resource: 'product', action: 'upload' }), upload.array('images'), uploadImages);
 productRouter.post('/uploadBannerImages', checkPermission({ resource: 'product', action: 'upload' }), upload.array('bannerimages'), uploadBannerImages);
 productRouter.post('/create', checkPermission({ resource: 'product', action: 'create' }), createProduct);
-productRouter.get('/getAllProducts', checkPermission({ resource: 'product', action: 'read' }), getAllProducts);
+productRouter.get('/getAllProducts',  getAllProducts);
 productRouter.get('/getAllProductsBanners', getAllProductsBanners);
 productRouter.get('/getAllProductsByCatId/:id', getAllProductsByCatId);
 productRouter.get('/getAllProductsByCatId', getAllProductsByCat);
