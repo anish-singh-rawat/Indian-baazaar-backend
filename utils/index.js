@@ -1,2 +1,2 @@
-import response from './response.js';
+import * as response  from './response.js';
 export { response };

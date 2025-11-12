@@ -1,6 +1,6 @@
 import express from 'express';
-import {CheckpickUpAddressValidator} from '../Validator/pickUpAddress.validator';
-import {registerPickUpAddress} from '../controllers/pickUpAddress.controller';
+import {CheckpickUpAddressValidator} from '../Validator/pickUpAddress.validator.js';
+import {registerPickUpAddress} from '../controllers/pickUpAddress.controller.js';
 
 const shipRocketAddressRoute = express.Router();
 

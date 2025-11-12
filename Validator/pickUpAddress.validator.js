@@ -1,4 +1,4 @@
-import { response } from '@utils';
+import { response } from "../utils/index.js";
 
 export const CheckpickUpAddressValidator = async(req, res, next)=>{
   try{
@@ -38,8 +38,6 @@ export const CheckpickUpAddressValidator = async(req, res, next)=>{
     response.error(res, e)
   }
 };
-
-const { response } = require('@utils');
 
 export const CheckrequestCreateOrder = (req, res, next)=>{
 
