@@ -18,7 +18,6 @@ import bannerList2Router from './route/bannerList2.route.js';
 import blogRouter from './route/blog.route.js';
 import orderRouter from './route/order.route.js';
 import notificationRouter from './route/notification.route.js';
-import trackingRoutes from './route/trackingRoutes.js';
 import permissionRouter from './route/permission.route.js';
 import shipRocketAddressRoute from './route/shiprocket.address.route.js';
 import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
@@ -41,7 +40,6 @@ app.use(helmet({
 }))
 
 console.log("Tracking route loaded");
-app.use("/api", trackingRoutes);
 
 try {
     app.get("/", (request, response) => {

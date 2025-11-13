@@ -148,9 +148,7 @@ class ShipRocket {
 
     try {
 
-      const result = await this.axiosInstance.post('courier/generate/label', {
-        shipping_id,
-      });
+      const result = await this.axiosInstance.post('courier/generate/label', { shipment_id : shipping_id });
 
       const { status, data } = this.validateData(result);
 
@@ -174,10 +172,8 @@ class ShipRocket {
   async generateInvoice(ids){
 
     try {
-
-      const result = await this.axiosInstance.post('orders/print/invoice', {
-        ids,
-      });
+      console.log("ids : ",ids);
+      const result = await this.axiosInstance.post('orders/print/invoice', { ids });
 
       const { status, data } = this.validateData(result);
 
@@ -203,10 +199,11 @@ class ShipRocket {
   async shipmentPickUp(shipping_id){
 
     try{
-
+      console.log("shipping_id : ",shipping_id);
       const result = await this.axiosInstance.post('courier/generate/pickup', {
-        shipping_id,
+        shipment_id : shipping_id,
       });
+      console.log("result : ",result);
 
       const { status, data } = this.validateData(result);
 
@@ -235,12 +232,12 @@ class ShipRocket {
     }
   }
 
-  async generateManifests(shipping_id){
+  async generateManifests(shipment_id){
 
     try {
 
       const result = await this.axiosInstance.post('manifests/generate', {
-        shipping_id,
+        shipment_id,
       });
 
       const { status, data } = this.validateData(result);

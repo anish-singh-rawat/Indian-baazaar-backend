@@ -2,7 +2,7 @@
 import axios from "axios";
 import { getShiprocketToken } from "../helper/shiprocketAuth.js";
 
-export const trackShipment = async (req, res) => {
+export const TrackShipmentRealTime = async (req, res) => {
   const { awb } = req.params;
   try {
     const token = await getShiprocketToken();

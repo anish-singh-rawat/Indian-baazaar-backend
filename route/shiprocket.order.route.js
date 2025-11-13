@@ -34,11 +34,7 @@ ShipRocketOrderRoute.post("/generate-invoice", CheckorderIds, generateInvoice);
 
 ShipRocketOrderRoute.post("/shipment-pickup", CheckshipmentIds, shipmentPickUp);
 
-ShipRocketOrderRoute.post(
-  "/generate-manifest",
-  CheckshipmentIds,
-  generateManifests
-);
+ShipRocketOrderRoute.post("/generate-manifest", CheckshipmentIds, generateManifests);
 
 ShipRocketOrderRoute.post("/print-manifest", CheckorderIds, printManifests);
 

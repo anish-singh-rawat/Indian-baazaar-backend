@@ -230,6 +230,7 @@ export const CheckshipmentIds = (req, res, next) =>{
     next()
   }
   catch (e){
+    console.log("Error bro : ",e);
     res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };

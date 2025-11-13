@@ -1,6 +1,5 @@
 export const success = (res, obj) => {
-  console.log("res : bro ",res);
-  console.log("res obj : ",obj);
+  console.log("res obj : ",obj.message);
 
   const { code, message, data, pagination } = obj;
 

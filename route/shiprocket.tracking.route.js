@@ -1,9 +1,11 @@
 import express from 'express';
 import { trackShipment } from '../utils/shiprocket.service.js';
+import { TrackShipmentRealTime } from '../controllers/trackingController.js';
 
 const router = express.Router();
 
-// Track shipment status
+router.get("/track/:awb", TrackShipmentRealTime);
+
 router.get('/track/:shipping_id', async (req, res, next) => {
   try {
     const { shipping_id } = req.params;
