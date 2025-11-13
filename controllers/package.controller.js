@@ -6,10 +6,7 @@ export const requestCreateOrder = async (req, res) => {
   try {
     let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
-
-    const { status, data, message } = await shipRocket.requestCreateOrder(
-      req.order
-    );
+    const { status, data, message } = await shipRocket.requestCreateOrder(req.body);
 
     if (!status) throw { code: 409, message };
 

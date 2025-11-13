@@ -58,6 +58,7 @@ class ShipRocket {
         country,
         pin_code,
       });
+       console.log("shiprocket result : ",result);
 
       const { success, address: addressData  } = result.data;
 
@@ -66,6 +67,7 @@ class ShipRocket {
       return { status: success, data: addressData, message: 'Address registered successfully!' }
     }
     catch(error){
+      console.log("shiprocket error : ",error);
 
       const {response} = error;
 
@@ -86,7 +88,7 @@ class ShipRocket {
         billing_country, billing_email, billing_phone,
         shipping_is_billing, order_items, payment_method, shipping_charges,
         giftwrap_charges, transaction_charges, total_discount, sub_total,
-        length, breadth, height, weight,
+        length, breadth, height, weight
       } = request;
 
       const result = await this.axiosInstance.post('orders/create/adhoc', {

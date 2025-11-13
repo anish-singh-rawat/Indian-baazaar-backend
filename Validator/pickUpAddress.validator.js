@@ -41,7 +41,7 @@ export const CheckpickUpAddressValidator = async(req, res, next)=>{
   }
   catch (e){
     console.log("Error : hai ji ",e);
-   throw new Error(e.message);
+   res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -110,7 +110,8 @@ export const CheckrequestCreateOrder = (req, res, next)=>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    console.log("charu error ",e);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -122,6 +123,7 @@ export const CheckpackageOrders = async(req, res, next)=>{
     const orders = [];
 
     const { orderItems } = req.body;
+    console.log("yhan tak aagya bro anish")
 
     await orderItems.forEach(datum=>{
 
@@ -154,8 +156,9 @@ export const CheckpackageOrders = async(req, res, next)=>{
 
   }
   catch (e){
+    console.log("oaky ji :",e);
 
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -197,7 +200,7 @@ export const CheckpackageParams = async (req, res, next) => {
     next()
   }
   catch (e) {
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -211,7 +214,7 @@ export const CheckassignAWB = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -229,7 +232,7 @@ export const CheckshipmentIds = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -247,7 +250,7 @@ export const CheckorderIds = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -265,7 +268,7 @@ export const CheckorderIds = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };
 
@@ -283,7 +286,7 @@ export const CheckgenerateManifests = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };*/
 /*
@@ -302,6 +305,6 @@ export const CheckprintManifests = (req, res, next) =>{
     next()
   }
   catch (e){
-    throw new Error(e.message);
+    res.status(e.code || 500).json({ message: e.message || "Internal Server Error", error: true, success: false });
   }
 };*/

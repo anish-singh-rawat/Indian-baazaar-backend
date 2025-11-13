@@ -1,16 +1,17 @@
 export const success = (res, obj) => {
+  console.log("res : bro ",res);
+  console.log("res obj : ",obj);
 
   const { code, message, data, pagination } = obj;
 
   return res.status(code).json({ status: true, message, data, pagination })
 };
 
-
 export const error = (res, e) => {
 
   const { code, message } = e;
 
-  return res.status(this.validateError(code)).json({ status: false, message, data: null, pagination: null })
+  return res.status(validateError(code)).json({ status: false, message, data: null, pagination: null })
 };
 
 export const validateError = (code) => {
