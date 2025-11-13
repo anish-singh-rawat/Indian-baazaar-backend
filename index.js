@@ -19,7 +19,6 @@ import blogRouter from './route/blog.route.js';
 import orderRouter from './route/order.route.js';
 import notificationRouter from './route/notification.route.js';
 import trackingRoutes from './route/trackingRoutes.js';
-import shiprocketRoutes from './route/shiprocketRoutes.js';
 import permissionRouter from './route/permission.route.js';
 import shipRocketAddressRoute from './route/shiprocket.address.route.js';
 import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
@@ -77,7 +76,6 @@ app.use("/api/bannerList2",bannerList2Router)
 app.use("/api/blog",blogRouter)
 app.use("/api/order",orderRouter)
 app.use('/api/notification', notificationRouter)
-app.use('/api/shiprocket', shiprocketRoutes)
 app.use('/api/permission', permissionRouter)
 app.use('/api/v1/pick-up-address',  shipRocketAddressRoute);
 app.use('/api/v1/package',  ShipRocketOrderRoute);

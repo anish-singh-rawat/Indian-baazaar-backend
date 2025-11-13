@@ -128,7 +128,7 @@ export async function createProduct(request, response) {
       thirdsubCat: request.body.thirdsubCat,
       thirdsubCatId: request.body.thirdsubCatId,
       countInStock: request.body.countInStock,
-      rating: request.body.rating,
+      rating: request.body.rating || 0,
       isFeatured: request.body.isFeatured,
       discount: request.body.discount,
       productRam: request.body.productRam,
