@@ -22,6 +22,7 @@ import trackingRoutes from './route/trackingRoutes.js';
 import permissionRouter from './route/permission.route.js';
 import shipRocketAddressRoute from './route/shiprocket.address.route.js';
 import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
+import shiprocketTrackingRoute from './route/shiprocket.tracking.route.js';
 
 const app = express();
 app.use(cors({
@@ -77,8 +78,9 @@ app.use("/api/blog",blogRouter)
 app.use("/api/order",orderRouter)
 app.use('/api/notification', notificationRouter)
 app.use('/api/permission', permissionRouter)
-app.use('/api/v1/pick-up-address',  shipRocketAddressRoute);
-app.use('/api/v1/package',  ShipRocketOrderRoute);
+app.use('/api/shiprocket/pick-up-address',  shipRocketAddressRoute);
+app.use('/api/shiprocket/package',  ShipRocketOrderRoute);
+app.use('/api/shiprocket', shiprocketTrackingRoute);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

@@ -1,4 +1,5 @@
 import OrderModel from "../models/order.model.js";
+import { validateAddress, createShipment, trackShipment } from '../utils/shiprocket.service.js';
 import ProductModel from '../models/product.modal.js';
 import UserModel from '../models/user.model.js';
 import paypal from "@paypal/checkout-server-sdk";
@@ -10,6 +11,16 @@ dotenv.config();
 export const createOrderController = async (request, response) => {
     try {
 
+        // Validate user's delivery address with Shiprocket
+        const deliveryPincode = request.body.delivery_address?.pincode;
+        if (!deliveryPincode) {
+            return response.status(400).json({ error: true, success: false, message: 'Delivery pincode required.' });
+        }
+        const isServiceable = await validateAddress(deliveryPincode);
+        if (!isServiceable) {
+            return response.status(400).json({ error: true, success: false, message: 'Delivery address not serviceable by Shiprocket. Please update your address.' });
+        }
+
         let order = new OrderModel({
             userId: request.body.userId,
             products: request.body.products,
@@ -17,7 +28,8 @@ export const createOrderController = async (request, response) => {
             payment_status: request.body.payment_status,
             delivery_address: request.body.delivery_address,
             totalAmt: request.body.totalAmt,
-            date: request.body.date
+            date: request.body.date,
+            order_status: 'pending' // Save as pending until retailer approval
         });
 
         if (!order) {
@@ -27,21 +39,9 @@ export const createOrderController = async (request, response) => {
             })
         }
 
-        order = await order.save();
+    order = await order.save();
 
-        for (let i = 0; i < request.body.products.length; i++) {
-
-            const product = await ProductModel.findOne({ _id: request.body.products[i].productId })
-
-            await ProductModel.findByIdAndUpdate(
-                request.body.products[i].productId,
-                {
-                    countInStock: parseInt(request.body.products[i].countInStock - request.body.products[i].quantity),
-                    sale: parseInt(product?.sale + request.body.products[i].quantity)
-                },
-                { new: true }
-            );
-        }
+        // Stock update deferred until retailer approval
 
         const user = await UserModel.findOne({ _id: request.body.userId })
 
@@ -60,7 +60,7 @@ export const createOrderController = async (request, response) => {
         return response.status(200).json({
             error: false,
             success: true,
-            message: "Order Placed",
+            message: "Order Placed. Awaiting retailer approval.",
             order: order
         });
 
@@ -226,23 +226,34 @@ export const captureOrderPaypalController = async (request, response) => {
 export const updateOrderStatusController = async (request, response) => {
     try {
         const { id, order_status } = request.body;
-
-        const updateOrder = await OrderModel.updateOne(
-            {
-                _id: id,
-            },
-            {
-                order_status: order_status,
-            },
-            { new: true }
-        )
-
+        const order = await OrderModel.findById(id);
+        if (!order) {
+            return response.status(404).json({ message: "Order not found", error: true, success: false });
+        }
+        // If retailer approves, create shipment in Shiprocket
+        let shipmentResult = null;
+        if (order_status === 'approved') {
+            // Prepare payload for Shiprocket
+            const payload = {
+                // Fill with required fields from order, retailer warehouse, and user delivery address
+                // Example:
+                order_id: order._id,
+                pickup_postcode: order.products[0]?.retailerWarehousePincode, // You must ensure this is available
+                delivery_postcode: order.delivery_address?.pincode,
+                // ...other required Shiprocket fields
+            };
+            shipmentResult = await createShipment(payload);
+        }
+        // Update order status
+        order.order_status = order_status;
+        await order.save();
         return response.json({
             message: "Update order status",
             success: true,
             error: false,
-            data: updateOrder
-        })
+            shipment: shipmentResult,
+            data: order
+        });
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,

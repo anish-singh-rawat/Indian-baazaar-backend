@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import {addReview, authWithGoogle, changePasswordController, forgotPasswordController, getAllReviews, getAllUsers, getReviews, loginAdminController, loginUserController, logoutController, refreshToken, registerRetailerController, registerUserController, removeImageFromCloudinary, resetpassword, updateUserDetails, userAvatarController, userDetails, verifyEmailController, verifyForgotPasswordOtp} from '../controllers/user.controller.js';
+import { shiprocketAddressValidation } from '../middlewares/shiprocketValidation.js';
 import auth from '../middlewares/auth.js';
 import { checkPermission } from '../middlewares/checkPermission.js';
 import upload from '../middlewares/multer.js';
 
 const userRouter = Router()
 userRouter.post('/register',registerUserController)
-userRouter.post('/register-retailer',registerRetailerController)
+userRouter.post('/register-retailer', shiprocketAddressValidation, registerRetailerController)
 userRouter.post('/verifyEmail',verifyEmailController)
 userRouter.post('/login',loginUserController)
 userRouter.post('/authWithGoogle',authWithGoogle)
