@@ -45,10 +45,10 @@ export async function createShipment(payload) {
   return await res.json();
 }
 
-export async function trackShipment(shipmentId) {
+export async function trackShipment(shipping_id) {
   // Track shipment status
   const SHIPROCKET_TOKEN = await getShiprocketToken();
-  const res = await fetch(`${SHIPROCKET_API_URL}/courier/track?order_id=${shipmentId}`, {
+  const res = await fetch(`${SHIPROCKET_API_URL}/courier/track?order_id=${shipping_id}`, {
     headers: { Authorization: `Bearer ${SHIPROCKET_TOKEN}` }
   });
   return await res.json();

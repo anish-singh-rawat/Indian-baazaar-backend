@@ -3,7 +3,7 @@ import CartProductModel from "../models/cartProduct.modal.js";
 export const addToCartItemController = async (request, response) => {
     try {
         const userId = request.userId //middleware
-        const { productTitle, image, rating, price, oldPrice, quantity, subTotal, productId, countInStock, discount,size, weight, ram, brand } = request.body
+        const { productTitle, image, rating, price, oldPrice, quantity, sub_total, productId, countInStock, discount,size, weight, ram, brand } = request.body
 
         if (!productId) {
             return response.status(402).json({
@@ -33,7 +33,7 @@ export const addToCartItemController = async (request, response) => {
             price:price,
             oldPrice:oldPrice,
             quantity:quantity,
-            subTotal:subTotal,
+            sub_total:sub_total,
             productId:productId,
             countInStock:countInStock,
             userId:userId,
@@ -93,7 +93,7 @@ export const updateCartItemQtyController = async (request, response) => {
     try {
 
         const userId = request.userId
-        const { _id, qty , subTotal, size, weight, ram} = request.body
+        const { _id, qty , sub_total, size, weight, ram} = request.body
 
 
 
@@ -110,7 +110,7 @@ export const updateCartItemQtyController = async (request, response) => {
             },
             {
                 quantity: qty,
-                subTotal:subTotal,
+                sub_total:sub_total,
                 size:size,
                 ram:ram,
                 weight:weight

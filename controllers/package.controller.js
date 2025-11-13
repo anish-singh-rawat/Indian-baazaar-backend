@@ -18,12 +18,12 @@ export const requestCreateOrder = async (req, res) => {
 
 export const assignAWB = async (req, res) => {
   try {
-    const { shipmentId } = req.body;
+    const { shipping_id } = req.body;
 
         let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
 
-    const { status, data, message } = await shipRocket.generateAWB(shipmentId);
+    const { status, data, message } = await shipRocket.generateAWB(shipping_id);
 
     if (!status) throw { code: 409, message };
 
@@ -35,13 +35,13 @@ export const assignAWB = async (req, res) => {
 
 export const generateLabel = async (req, res) => {
   try {
-    const { shipmentIds } = req.body;
+    const { shipping_ids } = req.body;
 
         let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
 
     const { status, data, message } = await shipRocket.generateLabel(
-      shipmentIds
+      shipping_ids
     );
 
     if (!status) throw { code: 409, message };
@@ -73,13 +73,13 @@ export const generateInvoice = async (req, res) => {
 
 export const shipmentPickUp = async (req, res) => {
   try {
-    const { shipmentIds } = req.body;
+    const { shipping_ids } = req.body;
 
         let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
 
     const { status, data, message } = await shipRocket.shipmentPickUp(
-      shipmentIds
+      shipping_ids
     );
 
     if (!status) throw { code: 409, message };
@@ -92,13 +92,13 @@ export const shipmentPickUp = async (req, res) => {
 
 export const generateManifests = async (req, res) => {
   try {
-    const { shipmentIds } = req.body;
+    const { shipping_ids } = req.body;
 
         let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
 
     const { status, data, message } = await shipRocket.generateManifests(
-      shipmentIds
+      shipping_ids
     );
 
     if (!status) throw { code: 409, message };

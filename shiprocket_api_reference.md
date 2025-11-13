@@ -58,23 +58,23 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 - **Payload:**
 ```json
 {
-  "orderId": "ORD123",
-  "orderDate": "2025-11-13",
-  "pickupLocation": "WH123456",
+  "order_id": "ORD123",
+  "order_date": "2025-11-13",
+  "pickup_location": "WH123456",
   "comment": "Handle with care",
-  "billingCustomerName": "John",
-  "billingLastName": "Doe",
-  "billingAddress": "123 Main St",
+  "billing_customer_name": "John",
+  "billing_last_name": "Doe",
+  "billing_address": "123 Main St",
   "billingAddressTwo": "Suite 101",
-  "billingCity": "Delhi",
-  "billingPincode": "110001",
-  "billingState": "Delhi",
-  "billingCountry": "India",
-  "billingEmail": "john@email.com",
-  "billingPhone": "9876543210",
-  "orderItems": [ ... ],
-  "paymentMethod": "Prepaid",
-  "subTotal": 1000,
+  "billing_city": "Delhi",
+  "billing_pincode": "110001",
+  "billing_state": "Delhi",
+  "billing_country": "India",
+  "billing_email": "john@email.com",
+  "billing_phone": "9876543210",
+  "order_items": [ ... ],
+  "payment_method": "Prepaid",
+  "sub_total": 1000,
   "length": 10,
   "breadth": 5,
   "height": 5,
@@ -106,7 +106,7 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 - **Payload:**
 ```json
 {
-  "shipmentId": "SHIP123456"
+  "shipping_id": "SHIP123456"
 }
 ```
 - **Success Response:**
@@ -133,7 +133,7 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 - **Payload:**
 ```json
 {
-  "shipmentIds": ["SHIP123456"]
+  "shipping_ids": ["SHIP123456"]
 }
 ```
 - **Success Response:**
@@ -187,7 +187,7 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 - **Payload:**
 ```json
 {
-  "shipmentIds": ["SHIP123456"]
+  "shipping_ids": ["SHIP123456"]
 }
 ```
 - **Success Response:**
@@ -214,7 +214,7 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 - **Payload:**
 ```json
 {
-  "shipmentIds": ["SHIP123456"]
+  "shipping_ids": ["SHIP123456"]
 }
 ```
 - **Success Response:**
@@ -290,7 +290,7 @@ This document lists all Shiprocket-related API endpoints in the backend, includi
 ---
 
 ### 10. Track Shipment
-- **Path:** `/shiprocket-tracking/track/:shipmentId`
+- **Path:** `/shiprocket-tracking/track/:shipping_id`
 - **Method:** GET
 - **Headers:** `Authorization: Bearer <Shiprocket Token>`
 - **Success Response:**
