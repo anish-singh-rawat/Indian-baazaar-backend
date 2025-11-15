@@ -61,6 +61,8 @@ export async function createPermission(req, res) {
 
     await permission.save();
 
+    // Invalidate permission cache after creation
+    await delCache('permissions:all*');
     return res.status(201).json({
       message: "Permission created successfully",
       success: true,
@@ -97,6 +99,8 @@ export async function updatePermission(req, res) {
       });
     }
 
+    // Invalidate permission cache after update
+    await delCache('permissions:all*');
     return res.status(200).json({
       message: "Permission updated successfully",
       success: true,
@@ -145,6 +149,8 @@ export async function deletePermission(req, res) {
       }
     );
 
+    // Invalidate permission cache after deletion
+    await delCache('permissions:all*');
     return res.status(200).json({
       message: "Permission deleted successfully",
       success: true,

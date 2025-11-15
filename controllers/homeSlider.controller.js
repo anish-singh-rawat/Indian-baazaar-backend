@@ -2,6 +2,8 @@ import HomeSliderModel from "../models/homeSlider.modal.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
+
 dotenv.config();
 
 cloudinary.config({
@@ -73,8 +75,10 @@ export async function addHomeSlide(request, response) {
     }
 
     slide = await slide.save();
-
     imagesArr = [];
+
+    // Invalidate home slides cache
+    await delCache('home_slides');
 
     return response.status(200).json({
       message: "Slide created",
@@ -93,6 +97,11 @@ export async function addHomeSlide(request, response) {
 
 export async function getHomeSlides(request, response) {
   try {
+    const cacheKey = 'home_slides';
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
     const slides = await HomeSliderModel.find();
 
     if (!slides) {
@@ -102,12 +111,13 @@ export async function getHomeSlides(request, response) {
         success: false,
       });
     }
-
-    return response.status(200).json({
+    const responseData = {
       error: false,
       success: true,
       data: slides,
-    });
+    };
+    await setCache(cacheKey, responseData);
+    return response.status(200).json(responseData);
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
@@ -222,18 +232,11 @@ export async function deleteSlide(request, response) {
       }
     }
 
-    const deletedSlide = await HomeSliderModel.findByIdAndDelete(
-      request.params.id
-    );
-    if (!deletedSlide) {
-      return response
-        .status(404)
-        .json({ message: "slide not deleted!", success: false, error: true });
-    }
+    await HomeSliderModel.deleteOne({ _id: request.params.id });
+    // Invalidate home slides cache
+    await delCache('home_slides');
 
-    return response
-      .status(200)
-      .json({ success: true, error: false, message: "slide Deleted!" });
+    return response.status(200).json({ message: "Slide deleted", success: true, error: false });
   } catch (error) {
     return response
       .status(500)

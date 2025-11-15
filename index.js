@@ -39,8 +39,6 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }))
 
-console.log("Tracking route loaded");
-
 try {
     app.get("/", (request, response) => {
         response.json({

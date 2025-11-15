@@ -10,6 +10,8 @@ import fs from "fs";
 import ReviewModel from "../models/reviews.model.js.js";
 import dotenv from "dotenv";
 import AddressModel from "../models/address.model.js";
+import { delCache } from "../utils/redisUtil.js";
+
 dotenv.config();
 
 cloudinary.config({
@@ -18,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
 });
-
 
 export async function registerRetailerController(request, response) {
   try {
@@ -176,6 +177,11 @@ export async function registerRetailerController(request, response) {
       html: VerificationEmail(name, verifyCode),
     });
 
+    // Invalidate user cache after registration
+    await delCache('users:all*');
+    await delCache('users:details*');
+    await delCache('users:search*');
+
     return response.status(200).json({
       success: true,
       error: false,
@@ -269,6 +275,11 @@ export async function registerUserController(request, response) {
       text: "Verify email to register in the Indian Baazaar",
       html: VerificationEmail(name, verifyCode),
     });
+
+    // Invalidate user cache after registration
+    await delCache('users:all*');
+    await delCache('users:details*');
+    await delCache('users:search*');
 
     return response.status(200).json({
       success: true,
@@ -759,6 +770,11 @@ export async function updateUserDetails(request, response) {
       },
       { new: true }
     );
+
+    // Invalidate user cache after update
+    await delCache('users:all*');
+    await delCache('users:details*');
+    await delCache('users:search*');
 
     return response.json({
       message: "User Updated successfully",

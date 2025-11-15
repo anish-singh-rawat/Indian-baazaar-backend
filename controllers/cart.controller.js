@@ -1,8 +1,9 @@
 import CartProductModel from "../models/cartProduct.modal.js";
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 
 export const addToCartItemController = async (request, response) => {
     try {
-        const userId = request.userId //middleware
+        const userId = request.userId
         const { productTitle, image, rating, price, oldPrice, quantity, sub_total, productId, countInStock, discount,size, weight, ram, brand } = request.body
 
         if (!productId) {
@@ -45,8 +46,8 @@ export const addToCartItemController = async (request, response) => {
         })
 
         const save = await cartItem.save();
-
-
+        // Invalidate cart cache for user
+        await delCache(`cart_${userId}`);
         return response.status(200).json({
             data: save,
             message: "Item add successfully",
@@ -68,18 +69,19 @@ export const addToCartItemController = async (request, response) => {
 export const getCartItemController = async (request, response) => {
     try {
         const userId = request.userId;
-
-        const cartItems = await CartProductModel.find({
-            userId: userId
-        });
-
-        return response.json({
+        const cacheKey = `cart_${userId}`;
+        const cachedData = await getCache(cacheKey);
+        if (cachedData) {
+            return response.json(cachedData);
+        }
+        const cartItems = await CartProductModel.find({ userId: userId });
+        const responseData = {
             data: cartItems,
             error: false,
             success: true
-        })
-
-
+        };
+        await setCache(cacheKey, responseData);
+        return response.json(responseData);
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,
@@ -117,8 +119,8 @@ export const updateCartItemQtyController = async (request, response) => {
             },
             { new: true }
         )
-
-
+        // Invalidate cart cache for user
+        await delCache(`cart_${userId}`);
         return response.json({
             message: "Update cart item",
             success: true,
@@ -154,7 +156,8 @@ export const deleteCartItemQtyController = async (request, response) => {
 
 
           const deleteCartItem  = await CartProductModel.deleteOne({_id : id, userId : userId })
-
+          // Invalidate cart cache for user
+          await delCache(`cart_${userId}`);
           if(!deleteCartItem){
             return response.status(404).json({
                 message:"The product in the cart is not found",
@@ -188,7 +191,8 @@ export const emptyCartController = async (request, response) => {
         const userId = request.params.id // middlewar
 
         await CartProductModel.deleteMany({userId:userId })
-
+        // Invalidate cart cache for user
+        await delCache(`cart_${userId}`);
           return response.status(200).json({
             error : false,
             success : true,

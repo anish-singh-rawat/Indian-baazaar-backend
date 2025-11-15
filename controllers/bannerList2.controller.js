@@ -2,6 +2,7 @@ import BannerList2Model from "../models/bannerList2.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 dotenv.config();
 
 cloudinary.config({
@@ -75,9 +76,9 @@ export async function addBanner(request, response) {
     }
 
     banner = await banner.save();
-
     imagesArr = [];
-
+    // Invalidate banners cache
+    await delCache('banners_list2');
     return response.status(200).json({
       message: "banner created",
       error: false,
@@ -95,6 +96,11 @@ export async function addBanner(request, response) {
 
 export async function getBanners(request, response) {
   try {
+    const cacheKey = 'banners_list2';
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
     const banners = await BannerList2Model.find();
 
     if (!banners) {
@@ -103,12 +109,13 @@ export async function getBanners(request, response) {
         success: false,
       });
     }
-
-    return response.status(200).json({
+    const responseData = {
       error: false,
       success: true,
       data: banners,
-    });
+    };
+    await setCache(cacheKey, responseData);
+    return response.status(200).json(responseData);
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
@@ -179,7 +186,8 @@ export async function deleteBanner(request, response) {
         error: true,
       });
     }
-
+    // Invalidate banners cache
+    await delCache('banners_list2');
     response.status(200).json({
       success: true,
       error: false,

@@ -4,6 +4,7 @@ import UserModel from '../models/user.model.js';
 import OrderConfirmationEmail from "../utils/orderEmailTemplate.js";
 import sendEmailFun from "../config/sendEmail.js";
 import dotenv from 'dotenv';
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 dotenv.config();
 
 export const createOrderController = async (request, response) => {
@@ -40,9 +41,10 @@ export const createOrderController = async (request, response) => {
         }
 
     order = await order.save();
-
-        // Stock update deferred until retailer approval
-
+        // Invalidate order-related cache after creating an order
+        await delCache('order_list');
+        await delCache(`user_order_list_${request.body.userId}`);
+        await delCache('total_orders_count');
         const user = await UserModel.findOne({ _id: request.body.userId })
 
         const recipients = [];
@@ -77,15 +79,15 @@ export const createOrderController = async (request, response) => {
 
 export async function getOrderDetailsController(request, response) {
     try {
-        const userId = request.userId // order id
-
         const { page, limit } = request.query;
-
+        const cacheKey = 'order_list';
+        const cachedData = await getCache(cacheKey);
+        if (cachedData) {
+            return response.json(cachedData);
+        }
         const orderlist = await OrderModel.find().sort({ createdAt: -1 }).populate('delivery_address userId').skip((page - 1) * limit).limit(parseInt(limit));
-
         const total = await OrderModel.countDocuments(orderlist);
-
-        return response.json({
+        const responseData = {
             message: "order list",
             data: orderlist,
             error: false,
@@ -93,7 +95,9 @@ export async function getOrderDetailsController(request, response) {
             total: total,
             page: parseInt(page),
             totalPages: Math.ceil(total / limit)
-        })
+        };
+        await setCache(cacheKey, responseData);
+        return response.json(responseData);
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,
@@ -105,17 +109,17 @@ export async function getOrderDetailsController(request, response) {
 
 export async function getUserOrderDetailsController(request, response) {
     try {
-        const userId = request.userId // order id
-
+        const userId = request.userId;
         const { page, limit } = request.query;
-
+        const cacheKey = `user_order_list_${userId}`;
+        const cachedData = await getCache(cacheKey);
+        if (cachedData) {
+            return response.json(cachedData);
+        }
         const orderlist = await OrderModel.find({ userId: userId }).sort({ createdAt: -1 }).populate('delivery_address userId').skip((page - 1) * limit).limit(parseInt(limit));
-
         const orderTotal = await OrderModel.find({ userId: userId }).sort({ createdAt: -1 }).populate('delivery_address userId');
-
         const total = await orderTotal?.length;
-
-        return response.json({
+        const responseData = {
             message: "order list",
             data: orderlist,
             error: false,
@@ -123,7 +127,9 @@ export async function getUserOrderDetailsController(request, response) {
             total: total,
             page: parseInt(page),
             totalPages: Math.ceil(total / limit)
-        })
+        };
+        await setCache(cacheKey, responseData);
+        return response.json(responseData);
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,
@@ -132,17 +138,22 @@ export async function getUserOrderDetailsController(request, response) {
         })
     }
 }
-
 
 export async function getTotalOrdersCountController(request, response) {
     try {
+        const cacheKey = 'total_orders_count';
+        const cachedCount = await getCache(cacheKey);
+        if (cachedCount) {
+            return response.status(200).json(cachedCount);
+        }
         const ordersCount = await OrderModel.countDocuments();
-        return response.status(200).json({
+        const responseData = {
             error: false,
             success: true,
             count: ordersCount
-        })
-
+        };
+        await setCache(cacheKey, responseData);
+        return response.status(200).json(responseData);
     } catch (error) {
         return response.status(500).json({
             message: error.message || error,
@@ -151,7 +162,6 @@ export async function getTotalOrdersCountController(request, response) {
         })
     }
 }
-
 
 export const updateOrderStatusController = async (request, response) => {
     try {
@@ -177,6 +187,10 @@ export const updateOrderStatusController = async (request, response) => {
         // Update order status
         order.order_status = order_status;
         await order.save();
+        // Invalidate order-related cache after updating order status
+        await delCache('order_list');
+        await delCache(`user_order_list_${order.userId}`);
+        await delCache('total_orders_count');
         return response.json({
             message: "Update order status",
             success: true,

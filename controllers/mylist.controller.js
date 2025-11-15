@@ -1,4 +1,5 @@
 import MyListModel from '../models/myList.modal.js';
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 
 export const addToMyListController = async (request, response) => {
     try {
@@ -42,7 +43,8 @@ export const addToMyListController = async (request, response) => {
 
 
         const save  = await myList.save();
-
+        // Invalidate mylist cache for user
+        await delCache(`mylist_${userId}`);
         return response.status(200).json({
             error:false,
             success:true,
@@ -84,6 +86,8 @@ export const deleteToMyListController = async (request, response) => {
         }
 
 
+        // Invalidate mylist cache for user
+        await delCache(`mylist_${myListItem.userId}`);
         return response.status(200).json({
             error:false,
             success:true,
@@ -104,16 +108,22 @@ export const getMyListController = async (request, response) => {
     try {
         
         const userId = request.userId;
-
+        const cacheKey = `mylist_${userId}`;
+        const cachedData = await getCache(cacheKey);
+        if (cachedData) {
+            return response.status(200).json(cachedData);
+        }
         const myListItems = await MyListModel.find({
             userId:userId
         })
 
-        return response.status(200).json({
+        const responseData = {
             error:false,
             success:true,
             data:myListItems
-        })
+        };
+        await setCache(cacheKey, responseData);
+        return response.status(200).json(responseData);
 
     } catch (error) {
         return response.status(500).json({

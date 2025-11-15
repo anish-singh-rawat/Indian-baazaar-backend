@@ -2,6 +2,7 @@ import BlogModel from "../models/blog.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 dotenv.config();
 
 cloudinary.config({
@@ -80,6 +81,9 @@ export async function addBlog(request, response) {
 
     imagesArr = [];
 
+    // Invalidate blogs cache
+    await delCache('blogs');
+
     return response.status(200).json({
       message: "blog created",
       error: false,
@@ -99,7 +103,11 @@ export async function getBlogs(request, response) {
   try {
     const page = parseInt(request.query.page) || 1;
     const perPage = parseInt(request.query.perPage);
-
+    const cacheKey = `blogs_page_${page}_perPage_${perPage}`;
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
     const totalPosts = await BlogModel.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
 
@@ -123,13 +131,15 @@ export async function getBlogs(request, response) {
       });
     }
 
-    return response.status(200).json({
+    const responseData = {
       error: false,
       success: true,
       blogs: blogs,
       totalPages: totalPages,
       page: page,
-    });
+    };
+    await setCache(cacheKey, responseData);
+    return response.status(200).json(responseData);
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
@@ -202,17 +212,15 @@ export async function deleteBlog(request, response) {
     const deletedBlog = await BlogModel.findByIdAndDelete(request.params.id);
     if (!deletedBlog) {
       return response.status(404).json({
-        message: "blog not deleted!",
+        message: "blog not found!",
         success: false,
         error: true,
       });
     }
-
-    return response.status(200).json({
-      success: true,
-      error: false,
-      message: "blog Deleted!",
-    });
+    // Invalidate blogs cache (all pages)
+    // You may want to use a pattern to delete all blog cache keys, but here is a simple key
+    await delCache('blogs');
+    return response.status(200).json({ message: "Blog deleted", success: true, error: false });
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,

@@ -2,6 +2,7 @@ import CategoryModel from "../models/category.modal.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 dotenv.config();
 
 cloudinary.config({
@@ -77,8 +78,10 @@ export async function createCategory(request, response) {
     }
 
     category = await category.save();
-
     imagesArr = [];
+
+    // Invalidate categories cache
+    await delCache('categories');
 
     return response.status(200).json({
       message: "Category created",
@@ -98,6 +101,11 @@ export async function createCategory(request, response) {
 //get Categories
 export async function getCategories(request, response) {
   try {
+    const cacheKey = 'categories';
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      return response.status(200).json(cachedData);
+    }
     const categories = await CategoryModel.find();
     const categoryMap = {};
 
@@ -115,11 +123,13 @@ export async function getCategories(request, response) {
       }
     });
 
-    return response.status(200).json({
+    const responseData = {
       error: false,
       success: true,
       data: rootCategories,
-    });
+    };
+    await setCache(cacheKey, responseData);
+    return response.status(200).json(responseData);
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
@@ -309,6 +319,9 @@ export async function deleteCategory(request, response) {
         error: true,
       });
     }
+
+    // Invalidate categories cache
+    await delCache('categories');
 
     return response
       .status(200)

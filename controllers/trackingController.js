@@ -1,10 +1,16 @@
 // trackingController.js
 import axios from "axios";
 import { getShiprocketToken } from "../helper/shiprocketAuth.js";
+import { getCache, setCache } from '../utils/redisUtil.js';
 
 export const TrackShipmentRealTime = async (req, res) => {
   const { awb } = req.params;
+  const cacheKey = `tracking_${awb}`;
   try {
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
     const token = await getShiprocketToken();
 
     const response = await axios.get(
@@ -16,6 +22,7 @@ export const TrackShipmentRealTime = async (req, res) => {
       }
     );
 
+    await setCache(cacheKey, response.data);
     res.json(response.data);
   } catch (error) {
     console.error("Tracking error:", error.response?.data || error.message);
