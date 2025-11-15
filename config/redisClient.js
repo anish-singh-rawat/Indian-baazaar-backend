@@ -9,9 +9,13 @@ export const redis = new Redis({
   password: process.env.REDIS_PASSWORD || undefined,
 });
 
-redis.on('connect', () => {
-  console.log('Connected to Redis');
-});
-redis.on('error', (err) => {
-  console.error('Redis error:', err);
-});
+try {
+  redis.on('connect', () => {
+    console.log('Connected to Redis');
+  });
+  redis.on('error', (err) => {
+    console.error('Redis error:', err);
+  });
+} catch (error) {
+  console.log("error : ",error);
+}
