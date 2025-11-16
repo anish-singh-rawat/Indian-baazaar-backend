@@ -25,7 +25,7 @@ import shiprocketTrackingRoute from './route/shiprocket.tracking.route.js';
 
 const app = express();
 app.use(cors({
-  origin: ["http://localhost:5173","http://localhost:5174"],
+  origin: ["http://localhost:5173","http://localhost:5174", "http://admin.indianbaazaar.com/", "https://admin.indianbaazaar.com", "https://indianbaazaar.com", "http://indianbaazaar.com", "https://www.indianbaazaar.com", "http://www.indianbaazaar.com", "www.indianbaazaar.com", "www.admin.indianbaazaar.com", "http://www.admin.indianbaazaar.com", "https://www.admin.indianbaazaar.com"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
