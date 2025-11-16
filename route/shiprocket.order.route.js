@@ -8,6 +8,7 @@ import {
   generateManifests,
   printManifests,
   deleteOrder,
+  getOrders,
 } from "../controllers/package.controller.js";
 import {
   CheckrequestCreateOrder,
@@ -39,5 +40,7 @@ ShipRocketOrderRoute.post("/generate-manifest", CheckshipmentIds, generateManife
 ShipRocketOrderRoute.post("/print-manifest", CheckorderIds, printManifests);
 
 ShipRocketOrderRoute.delete("/delete-order", CheckorderIds, deleteOrder);
+
+ShipRocketOrderRoute.get("/get-orders", getOrders);
 
 export default ShipRocketOrderRoute;

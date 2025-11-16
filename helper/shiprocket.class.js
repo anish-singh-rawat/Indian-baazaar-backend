@@ -305,6 +305,26 @@ class ShipRocket {
     }
   }
 
+  async getOrders(params = {}) {
+
+    try {
+      const queryParams = new URLSearchParams(params).toString();
+      const url = `orders?${queryParams}`;
+      const result = await this.axiosInstance.get(url);
+
+      const { status, data } = this.validateData(result);
+
+      if(!status) throw { message: data.message };
+
+      return { status: true, data, message: 'Orders fetched successfully!' }
+    }
+    catch (error){
+      const message = this.parseError(error);
+
+      return { status: false, data: null, message }
+    }
+  }
+
   validateData(result){
 
     if(result.status === 400){
