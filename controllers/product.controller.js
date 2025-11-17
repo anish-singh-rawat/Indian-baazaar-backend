@@ -129,13 +129,13 @@ export async function createProduct(request, response) {
       thirdsubCat: request.body.thirdsubCat,
       thirdsubCatId: request.body.thirdsubCatId,
       countInStock: request.body.countInStock,
-      rating: request.body.rating || 0,
+      rating:  0,
       isFeatured: request.body.isFeatured,
       discount: request.body.discount,
       productRam: request.body.productRam,
       size: request.body.size,
       productWeight: request.body.productWeight,
-      createdBy: request.userId, // Track who created this product
+      createdBy: request.userId, 
     });
 
     product = await product.save();
