@@ -24,8 +24,22 @@ import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
 import shiprocketTrackingRoute from './route/shiprocket.tracking.route.js';
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://indianbaazaar.com",
+  "https://www.indianbaazaar.com",
+  "https://admin.indianbaazaar.com",
+  "https://www.admin.indianbaazaar.com",
+];
+
 app.use(cors({
-  origin: ["http://localhost:5173","http://localhost:5174"],
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]

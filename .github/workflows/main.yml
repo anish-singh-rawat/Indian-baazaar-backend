@@ -1,0 +1,34 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main   # ya jis branch se deploy karna hai
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code (sirf reference ke liye, deploy EC2 se hoga)
+        uses: actions/checkout@v4
+
+      - name: SSH into EC2 and deploy backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/IndianBaazaar-backend
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            npm install --production
+
+            echo "Restarting PM2 process..."
+            pm2 restart indianBaazaar-backend || pm2 start index.js --name indianBaazaar-backend
+
+            echo "Backend deployed successfully ✅"
