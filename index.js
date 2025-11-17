@@ -105,6 +105,6 @@ app.use((err, req, res, next) => {
 
 connectDB().then(() => {
     app.listen(process.env.PORT, () => {
-        console.log(`Server is running http://localhost:${process.env.PORT}`);
+        console.log(`Server is running http://localhost:${process.env.PORT} with CI/CD`);
     })
 })
