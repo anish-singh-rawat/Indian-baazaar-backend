@@ -3,11 +3,42 @@ import { getShiprocketToken } from "../helper/shiprocketAuth.js";
 import { response } from "../utils/index.js";
 import { getCache, setCache } from "../utils/redisUtil.js";
 
+import OrderModel from "../models/order.model.js";
+import ProductModel from "../models/product.modal.js";
+import UserModel from "../models/user.model.js";
+import AddressModel from "../models/address.model.js";
+import { buildShiprocketOrderPayload } from "../utils/shiprocketPayloadBuilder.js";
+
 export const requestCreateOrder = async (req, res) => {
   try {
+    const { orderId, userId, sellerId } = req.body;
+
+    if (!orderId) throw { code: 400, message: 'orderId is required' };
+    const order = await OrderModel.findById(orderId).lean();
+    if (!order) throw { code: 404, message: 'Order not found' };
+
+    const user = userId ? await UserModel.findById(userId).lean() : await UserModel.findById(order.userId).lean();
+    if (!user) throw { code: 404, message: 'User not found' };
+
+    let seller = null;
+    if (sellerId) seller = await UserModel.findById(sellerId).lean();
+
+    const productIds = order.products.map(p => p.productId).filter(Boolean);
+    const products = await ProductModel.find({ _id: { $in: productIds } }).lean();
+
+    if (!seller) {
+      const firstProduct = products.find(p => p.createdBy);
+      if (firstProduct && firstProduct.createdBy) {
+        seller = await UserModel.findById(firstProduct.createdBy).lean();
+      }
+    }
+
+    if (!seller || seller == (null || undefined || "")) throw { code: 404, message: 'Seller not found or not provided' };
+    const payload = buildShiprocketOrderPayload({ order, user, seller, products });
+
     let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
-    const { status, data, message } = await shipRocket.requestCreateOrder(req.body);
+    const { status, data, message } = await shipRocket.requestCreateOrder(payload);
 
     if (!status) throw { code: 409, message };
 

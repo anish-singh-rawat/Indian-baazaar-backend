@@ -49,64 +49,9 @@ export const CheckrequestCreateOrder = (req, res, next)=>{
 
   try{
     
-    const {
-      order_id, order_date, pickup_location, comment, billing_customer_name,
-      billing_last_name, billing_address, billing_city,
-      billing_pincode, billing_state, billing_country, billing_email,
-      billing_phone, order_items, payment_method, sub_total,
-      length, breadth, height, weight,
-    } = req.body;
+    const { orderId, userId, sellerId } = req.body;
 
-    if(!order_id) throw { code: 409, message: 'please provide order Id' };
-
-    if(!order_date) throw { code: 409, message: 'please provide order date' };
-
-    if(!pickup_location) throw { code: 409, message: 'please provide pick location' };
-    if(!comment) throw { code: 409, message: 'please provide comment' };
-
-    if(!billing_customer_name) throw { code: 409, message: 'please provide customer name' };
-
-    if(!billing_last_name) throw { code: 409, message: 'please provide customer last name' };
-
-    if(!billing_address) throw { code: 409, message: 'please provide customer address' };
-
-    if(!billing_city) throw { code: 409, message: 'please provide customer city' };
-    if(!billing_pincode) throw { code: 409, message: 'please customer pincode!' };
-
-    if(billing_pincode.length !== 6 ) throw { code: 409, message: 'please provide customer pincode!' }
-
-    if(!billing_state ) throw { code: 409, message: 'please provide customer state!' };
-
-    if(!billing_country ) throw { code: 409, message: 'please provide customer country!' };
-
-    if(!billing_state ) throw { code: 409, message: 'please provide customer state!' };
-
-    if(!billing_email) throw { code: 409, message: 'please provide customer email!' };
-
-    if(!billing_phone ) throw { code: 409, message: 'please provide customer phone!' };
-
-    const validPhone = global.phoneUtil.parseAndKeepRawInput(billing_phone, process.env.COUNTRY_CODE);
-
-    if(!validPhone) throw { code: 409, message: 'please provide phone!' };
-
-    if(!order_items) throw { code: 409, message: 'please provide orders!' };
-
-    if(order_items.length <=0 ) throw { code: 409, message: 'please provide orders!' };
-
-    if(!payment_method) throw { code: 409,  message: 'please provide payment methods!' };
-
-    if(!['Prepaid','Postpaid'].includes(payment_method)) throw { code: 409,  message: 'please provide payment methods!' };
-
-    if(!sub_total) throw { code: 409,  message: 'please provide sub-total charges!' };
-
-    if(!length) throw { code: 409,  message: 'please provide package length!' };
-
-    if(!breadth) throw { code: 409,  message: 'please provide package breadth!' };
-
-    if(!height) throw { code: 409,  message: 'please provide package height!' };
-
-    if(!weight) throw { code: 409,  message: 'please provide package weight!' };
-
+    if(!orderId) throw { code: 409, message: 'please provide orderId' };
     next()
   }
   catch (e){
