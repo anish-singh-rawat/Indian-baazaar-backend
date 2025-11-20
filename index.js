@@ -29,6 +29,8 @@ import permissionRouter from './route/permission.route.js';
 import shipRocketAddressRoute from './route/shiprocket.address.route.js';
 import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
 import shiprocketTrackingRoute from './route/shiprocket.tracking.route.js';
+import adminRouter from './route/admin.route.js';
+import { razorpayWebhook } from './controllers/payment.controller.js';
 
 const app = express();
 const allowedOrigins = [
@@ -52,7 +54,6 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
-// Security middlewares
 app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: {
@@ -64,13 +65,13 @@ app.use(helmet({
     },
   },
 }));
-app.use(compression()); // Compress responses
-app.use(morgan('combined')); // HTTP request logging
-app.use(mongoSanitize()); // Prevent MongoDB injection
-app.use(xss()); // Prevent XSS attacks
-app.use(hpp()); // Prevent HTTP parameter pollution
+app.use(compression()); 
+app.use(morgan('combined'));
+app.use(mongoSanitize());
+app.use(xss()); 
+app.use(hpp()); 
 
-app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
+app.use(express.json({ limit: '10mb' })); 
 app.use(cookieParser())
 
 const checkBlockedIP = async (req, res, next) => {
@@ -152,6 +153,8 @@ app.use('/api/permission', permissionRouter)
 app.use('/api/shiprocket/pick-up-address',  shipRocketAddressRoute);
 app.use('/api/shiprocket/package',  ShipRocketOrderRoute);
 app.use('/api/shiprocket', shiprocketTrackingRoute);
+app.use('/api/admin', adminRouter);
+app.post('/api/payment/webhook', express.json({ type: '*/*' }), razorpayWebhook);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

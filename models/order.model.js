@@ -45,6 +45,18 @@ const orderSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    paymentStatus: {
+        type: String,
+        enum: ['PENDING', 'SUCCESS', 'FAILED'],
+    },
+    shippingStatus : {
+        type : String,
+        enum: ['PENDING', 'SHIPPED', 'DELIVERED'],
+    },
+    settlementStatus : {
+        type : String,
+        enum: ['NOT_ELIGIBLE', 'ELIGIBLE', 'SETTLED', "PAID"],
+    },
     products: [
         {
             productId: {
@@ -83,9 +95,23 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'address'
     },
+    deliveredAt : {
+        type: Date,
+    },
     totalAmt: {
         type: Number,
         default: 0
+    },
+    platformCommission : {
+        type : Number,
+        default : 5
+    },
+    retailerId : {
+        type : mongoose.Schema.ObjectId,
+        ref : 'Retailer'
+    },
+    razorpayOrderId: {
+        type: String,
     }
 }, {
     timestamps: true
