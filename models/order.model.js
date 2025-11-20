@@ -5,6 +5,46 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     },
+    channel_order_id : {
+        type: String,
+        default: ""
+    },
+    shipment_id : {
+        type: String,
+        default: ""
+    },
+    courier_name : {
+        type: String,
+        default: ""
+    },
+    awb_code : {
+        type: String,
+        default: ""
+    },
+    packaging_box_error : {
+        type: String,
+        default: ""
+    },
+    order_status : {
+        type: String,
+        default: ""
+    },
+    status_code : {
+        type: String,
+        default: ""
+    },
+    courier_company_id : {
+        type: String,
+        default: ""
+    },
+    new_channel : {
+        type: String,
+        default: ""
+    },
+    tax_invoice_pdf : {
+        type: String,
+        default: ""
+    },
     products: [
         {
             productId: {

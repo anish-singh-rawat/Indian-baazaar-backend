@@ -1,6 +1,7 @@
 import axios from 'axios';
 import RandExp from 'randexp';
 import dotenv from 'dotenv';
+import OrderModel from '../models/order.model.js';
 dotenv.config();
 
 const REQUIRED_FIELDS = [
@@ -218,7 +219,7 @@ class ShipRocket {
     }
   }
 
-  async generateInvoice(ids){
+  async generateInvoice(ids,orderId){
 
     try {
       console.log("ids : ",ids);
@@ -235,6 +236,7 @@ class ShipRocket {
       if(!is_invoice_created) throw { code: 409, message: 'Unable to generate invoice!' };
 
       if(not_created.length>0) throw { message: 'Error while generating invoices!' };
+      await OrderModel.findByIdAndUpdate(orderId, { tax_invoice_pdf: invoice_url }, { new: true }).lean();
 
       return { status: true, data: invoice_url, message: 'Invoice generated successfully!' }
     }

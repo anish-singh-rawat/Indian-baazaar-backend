@@ -39,7 +39,17 @@ export const requestCreateOrder = async (req, res) => {
     const { status, data, message } = await shipRocket.requestCreateOrder(payload);
 
     if (!status) throw { code: 409, message };
-
+    await OrderModel.findByIdAndUpdate(orderId, { 
+      channel_order_id: data?.order_id,
+      shipment_id: data?.shipment_id,
+      courier_name: data?.courier_name,
+      awb_code: data?.awb_code,
+      packaging_box_error: data?.packaging_box_error,
+      order_status: data?.order_status,
+      status_code: data?.status_code,
+      courier_company_id: data?.courier_company_id,
+      new_channel: data?.new_channel
+    }, { new: true }).lean();
     response.success(res, { code: 200, message, data, pagination: null });
   } catch (e) {
     response.error(res, e);
@@ -82,12 +92,12 @@ export const generateLabel = async (req, res) => {
 
 export const generateInvoice = async (req, res) => {
   try {
-    const { orderIds } = req.body;
+    const { orderIds,orderId } = req.body;
 
     let token = await getShiprocketToken();
     const shipRocket = new ShipRocket(token);
 
-    const { status, data, message } = await shipRocket.generateInvoice(orderIds);
+    const { status, data, message } = await shipRocket.generateInvoice(orderIds, orderId);
 
     if (!status) throw { code: 409, message };
 
