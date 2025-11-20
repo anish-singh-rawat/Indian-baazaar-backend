@@ -3,8 +3,8 @@ import Settlement from '../models/settlement.model.js';
 import RetailerWallet from '../models/retailerWallet.model.js';
 import RetailerLedger from '../models/retailerLedger.model.js';
 import Razorpay from 'razorpay';
-import Retailer from '../models/retailer.model.js'; 
 import dotenv from 'dotenv'
+import UserModel from '../models/user.model.js';
 dotenv.config()
 
 const razorpay = new Razorpay({
@@ -31,7 +31,7 @@ export const approveSettlement = async (req, res) => {
   
   const netPayableToRetailer = order.totalAmt - (order.platformCommission * 100);
 
-  const retailer = await Retailer.findById(order.retailerId);
+  const retailer = await UserModel.findById(order.retailerId);
   if (!retailer || !retailer.razorpayFundAccountId)
     return res.status(400).json({ error: true, message: 'Retailer Razorpay account not found' });
 
