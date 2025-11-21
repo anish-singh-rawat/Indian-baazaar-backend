@@ -3,13 +3,13 @@ import { checkPermission } from '../middlewares/checkPermission.js';
 import upload from '../middlewares/multer.js';
 import {createProduct, createProductRAMS, deleteMultipleProduct, deleteProduct, deleteProductRAMS, getAllFeaturedProducts, getAllProducts, getAllProductsByCatId, getAllProductsByCatName, getAllProductsByPrice, getAllProductsByRating, getAllProductsBySubCatId, getAllProductsBySubCatName, getAllProductsByThirdLavelCatId, getProduct, getProductRams, getProductsCount, updateProduct, updateProductRam, uploadImages, getProductRamsById, createProductWEIGHT, deleteProductWEIGHT, updateProductWeight, getProductWeight, getProductWeightById, createProductSize, deleteProductSize, updateProductSize, getProductSize, getProductSizeById, uploadBannerImages, getAllProductsBanners, filters, sortBy, searchProductController, getAllProductsByCat} from '../controllers/product.controller.js';
 
-import {removeImageFromCloudinary} from '../controllers/category.controller.js';
+import { checkRetailerBankDetails } from '../middlewares/checkRetailerBankDetails.js';
 
 const productRouter = Router();
 
 productRouter.post('/uploadImages', checkPermission({ resource: 'product', action: 'upload' }), upload.array('images'), uploadImages);
 productRouter.post('/uploadBannerImages', checkPermission({ resource: 'product', action: 'upload' }), upload.array('bannerimages'), uploadBannerImages);
-productRouter.post('/create', checkPermission({ resource: 'product', action: 'create' }), createProduct);
+productRouter.post('/create', checkPermission({ resource: 'product', action: 'create' }), checkRetailerBankDetails, createProduct);
 productRouter.get('/getAllProducts',  getAllProducts);
 productRouter.get('/getAllProductsBanners', getAllProductsBanners);
 productRouter.get('/getAllProductsByCatId/:id', getAllProductsByCatId);

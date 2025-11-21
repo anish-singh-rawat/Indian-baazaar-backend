@@ -1,7 +1,45 @@
 import axios from 'axios';
 import RandExp from 'randexp';
 import dotenv from 'dotenv';
+import OrderModel from '../models/order.model.js';
 dotenv.config();
+
+const REQUIRED_FIELDS = [
+  "order_id",
+  "order_date",
+  "pickup_location",
+  "billing_customer_name",
+  "billing_address",
+  "billing_city",
+  "billing_pincode",
+  "billing_state",
+  "billing_country",
+  "billing_phone",
+  "order_items",
+  "payment_method",
+  "sub_total",
+  "length",
+  "breadth",
+  "height",
+  "weight"
+];
+function validateRequiredFields(request, requiredFields) {
+  const missing = [];
+  requiredFields.forEach((field) => {
+    const value = request[field];
+    if (
+      value === undefined ||
+      value === null ||
+      value === "" ||
+      (Array.isArray(value) && value.length === 0)
+    ) {
+      missing.push(field);
+    }
+  });
+  return missing;
+}
+
+
 
 class ShipRocket {
 
@@ -58,13 +96,13 @@ class ShipRocket {
         country,
         pin_code,
       });
-       console.log("shiprocket result : ",result);
-
-      const { success, address: addressData  } = result.data;
+      
+      const { success, address: addressData } = result.data;
 
       if(!success) throw { message: 'Unable to register address' };
+      const pickup_location = addressData.pickup_code; 
 
-      return { status: success, data: addressData, message: 'Address registered successfully!' }
+      return { status: success, pickup_location, data: addressData, message: 'Address registered successfully!' }
     }
     catch(error){
       console.log("shiprocket error : ",error);
@@ -90,6 +128,16 @@ class ShipRocket {
         giftwrap_charges, transaction_charges, total_discount, sub_total,
         length, breadth, height, weight
       } = request;
+    
+    const missingFields = validateRequiredFields(request, REQUIRED_FIELDS);
+
+    if (missingFields.length > 0) {
+      return {
+        status: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+        data: null
+      };
+    }
 
       const result = await this.axiosInstance.post('orders/create/adhoc', {
         order_id, order_date, pickup_location, channel_id, comment,
@@ -100,6 +148,8 @@ class ShipRocket {
         giftwrap_charges, transaction_charges, total_discount, sub_total,
         length, breadth, height, weight,
       });
+
+      console.log("result : ",result);
 
       const { status, data } = this.validateData(result);
 
@@ -169,7 +219,7 @@ class ShipRocket {
     }
   }
 
-  async generateInvoice(ids){
+  async generateInvoice(ids,orderId){
 
     try {
       console.log("ids : ",ids);
@@ -186,6 +236,7 @@ class ShipRocket {
       if(!is_invoice_created) throw { code: 409, message: 'Unable to generate invoice!' };
 
       if(not_created.length>0) throw { message: 'Error while generating invoices!' };
+      await OrderModel.findByIdAndUpdate(orderId, { tax_invoice_pdf: invoice_url }, { new: true }).lean();
 
       return { status: true, data: invoice_url, message: 'Invoice generated successfully!' }
     }

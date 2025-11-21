@@ -2,6 +2,7 @@ import PermissionModel from "../models/permission.model.js";
 import RolePermissionModel from "../models/rolePermission.model.js";
 import UserPermissionModel from "../models/userPermission.model.js";
 import UserModel from "../models/user.model.js";
+import { delCache } from "../utils/redisUtil.js";
 
 /**
  * Get all permissions

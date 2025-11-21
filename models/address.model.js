@@ -5,6 +5,10 @@ const addressSchema = mongoose.Schema({
         type : String,
         default : ""
     },
+    pickup_location : {
+        type : String,
+        default : ""
+    },
     city : {
         type : String,
         default : ""

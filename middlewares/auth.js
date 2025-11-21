@@ -7,12 +7,10 @@ const auth = async(request,response,next)=>{
         const token =  request?.headers?.authorization?.split(" ")[1];
 
         if(!token){
-           token = request.query.token; 
-        }
-
-        if(!token){
             return response.status(401).json({
-                message : "Please provide the access token"
+                message : "Please provide the access token in Authorization header",
+                error : true,
+                success : false
             })
         }
 
@@ -20,7 +18,7 @@ const auth = async(request,response,next)=>{
 
         if(!decode){
             return response.status(401).json({
-                message : "unauthorized access",
+                message : "Unauthorized access",
                 error : true,
                 success : false
             })
@@ -31,11 +29,10 @@ const auth = async(request,response,next)=>{
         next();
 
     } catch (error) {
-        return response.status(500).json({
-            message : "Invaliad Token",
+        return response.status(401).json({
+            message : "Invalid or expired token",
             error : true,
-            success : false,
-            errorMessage : error.message
+            success : false
         })
     }
 }

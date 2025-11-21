@@ -22,11 +22,10 @@ export const checkPermission = (options = {}) => {
     try {
       // 1. Extract and verify token
       let token = req.headers?.authorization?.split(" ")[1];
-      if (!token) token = req.query.token;
 
       if (!token) {
         return res.status(401).json({
-          message: "Access token is required",
+          message: "Access token is required in Authorization header",
           success: false,
         });
       }

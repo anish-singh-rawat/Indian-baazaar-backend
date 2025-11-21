@@ -20,12 +20,7 @@ import {
 
 const ShipRocketOrderRoute = express.Router();
 
-ShipRocketOrderRoute.post(
-  "/create-order",
-  CheckrequestCreateOrder,
-  CheckpackageOrders,
-  requestCreateOrder
-);
+ShipRocketOrderRoute.post("/create-order",CheckrequestCreateOrder,requestCreateOrder);
 
 ShipRocketOrderRoute.post("/assign-awb", CheckassignAWB, assignAWB);
 

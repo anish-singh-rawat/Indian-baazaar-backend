@@ -5,6 +5,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { redis } from './config/redisClient.js';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
+import hpp from 'hpp';
+import compression from 'compression';
+import morgan from 'morgan';
 import connectDB from './config/connectDb.js';
 import userRouter from './route/user.route.js'
 import categoryRouter from './route/category.route.js';
@@ -22,6 +29,9 @@ import permissionRouter from './route/permission.route.js';
 import shipRocketAddressRoute from './route/shiprocket.address.route.js';
 import ShipRocketOrderRoute from './route/shiprocket.order.route.js';
 import shiprocketTrackingRoute from './route/shiprocket.tracking.route.js';
+import adminRouter from './route/admin.route.js';
+import retailerRouter from './route/retailer.route.js';
+import { razorpayWebhook } from './controllers/payment.controller.js';
 
 const app = express();
 const allowedOrigins = [
@@ -31,6 +41,7 @@ const allowedOrigins = [
   "https://www.indianbaazaar.com",
   "https://admin.indianbaazaar.com",
   "https://www.admin.indianbaazaar.com",
+  "https://vivid-seats-assignment.vercel.app"
 ];
 
 app.use(cors({
@@ -45,13 +56,66 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
-
-
-app.use(express.json())
-app.use(cookieParser())
 app.use(helmet({
-    crossOriginResourcePolicy: false
-}))
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+app.use(compression()); 
+app.use(morgan('combined'));
+app.use(mongoSanitize());
+app.use(xss()); 
+app.use(hpp()); 
+
+app.use(express.json({ limit: '10mb' })); 
+app.use(cookieParser())
+
+const checkBlockedIP = async (req, res, next) => {
+  const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  try {
+    const isBlocked = await redis.get(`blocked:${ip}`);
+    if (isBlocked) {
+      return res.status(403).json({
+        error: true,
+        success: false,
+        message: 'Your IP address has been blocked due to suspicious activity.'
+      });
+    }
+  } catch (error) {
+    console.error('Error checking blocked IP:', error);
+  }
+  next();
+};
+
+app.use(checkBlockedIP);
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100,
+    message: {
+        error: true,
+        success: false,
+        message: 'Too many requests from this IP, please try again later.'
+    },
+    standardHeaders: true, 
+    legacyHeaders: false,
+    onLimitReached: async (req, res) => {
+        const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+        try {
+            await redis.set(`blocked:${ip}`, 'true', 'EX', 3600);
+        } catch (error) {
+            console.error('Error blocking IP:', error);
+        }
+    }
+});
+
+app.use(limiter);
 
 try {
     app.get("/", (request, response) => {
@@ -91,6 +155,9 @@ app.use('/api/permission', permissionRouter)
 app.use('/api/shiprocket/pick-up-address',  shipRocketAddressRoute);
 app.use('/api/shiprocket/package',  ShipRocketOrderRoute);
 app.use('/api/shiprocket', shiprocketTrackingRoute);
+app.use('/api/admin', adminRouter);
+app.use('/api/retailer', retailerRouter);
+app.post('/api/payment/webhook', express.json({ type: '*/*' }), razorpayWebhook);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
