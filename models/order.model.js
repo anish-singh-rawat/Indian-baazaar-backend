@@ -110,9 +110,20 @@ const orderSchema = new mongoose.Schema({
         type : mongoose.Schema.ObjectId,
         ref : 'Retailer'
     },
-    razorpayOrderId: {
-        type: String,
-    }
+    paymentApprovalByAdmin: {
+        type: Boolean,
+        default: false
+    },
+    paymentApprovalAt: {
+        type: Date,
+    },
+    paymentReleased: {
+        type: Boolean,
+        default: false
+    },
+    paymentReleasedAt: {
+        type: Date,
+    },
 }, {
     timestamps: true
 })

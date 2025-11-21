@@ -4,6 +4,6 @@ import { superAdminAuth } from '../middlewares/adminAuth.js';
 
 const router = express.Router();
 
-router.post('/api/admin/settlements/:orderId/approve', superAdminAuth, approveSettlement);
+router.post('/settlements/:orderId/approve', superAdminAuth, approveSettlement);
 
 export default router;

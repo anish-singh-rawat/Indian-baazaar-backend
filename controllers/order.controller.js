@@ -46,7 +46,8 @@ export const createOrderController = async (request, response) => {
             delivery_address: request.body.delivery_address,
             totalAmt: request.body.totalAmt,
             date: request.body.date,
-            order_status: 'pending' // Save as pending until retailer approval
+            order_status: 'pending',
+            retailerId : request.body.retailerId,
         });
 
         if (!order) {
@@ -619,3 +620,4 @@ export async function deleteOrder(request, response) {
         return response.status(500).json({ message: error.message || error, error: true, success: false });
     }
 }
+
