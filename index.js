@@ -77,7 +77,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser())
 
 const checkBlockedIP = async (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  const forwarded = req.headers['x-forwarded-for'];
+  const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded) || req.ip || req.socket?.remoteAddress;
   try {
     const isBlocked = await redis.get(`blocked:${ip}`);
     if (isBlocked) {
@@ -96,26 +97,36 @@ const checkBlockedIP = async (req, res, next) => {
 app.use(checkBlockedIP);
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 100,
-    message: {
-        error: true,
-        success: false,
-        message: 'Too many requests from this IP, please try again later.'
-    },
-    standardHeaders: true, 
-    legacyHeaders: false,
-    onLimitReached: async (req, res) => {
-        const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
-        try {
-            await redis.set(`blocked:${ip}`, 'true', 'EX', 3600);
-        } catch (error) {
-            console.error('Error blocking IP:', error);
-        }
-    }
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    error: true,
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+
+ handler: async (req, res, next) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded) || req.ip || req.socket?.remoteAddress;
+  try {
+    await redis.set(`blocked:${ip}`, 'true', 'EX', 3600); 
+  } catch (error) {
+    console.error('Error blocking IP:', error);
+  }
+
+  return res.status(429).json({
+    error: true,
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  });
+}
+
 });
 
 app.use(limiter);
+
 
 try {
     app.get("/", (request, response) => {
