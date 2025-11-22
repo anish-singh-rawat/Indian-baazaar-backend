@@ -21,70 +21,104 @@ export const createOrderController = async (req, res) => {
     const { userId, productIds, quantities, deliveryAddressId } = req.body;
 
     if (!userId || !productIds || !quantities || !deliveryAddressId) {
-      return res.status(400).json({ success: false, message: "All fields are required: userId, productIds, quantities, deliveryAddressId" });
+      return res.status(400).json({
+        success: false,
+        message:
+          "All fields are required: userId, productIds, quantities, deliveryAddressId",
+      });
     }
 
-    if (!Array.isArray(productIds) || !Array.isArray(quantities) || productIds.length !== quantities.length) {
-      return res.status(400).json({ success: false, message: "productIds and quantities must be arrays of the same length" });
+    if (
+      !Array.isArray(productIds) ||
+      !Array.isArray(quantities) ||
+      productIds.length !== quantities.length
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "productIds and quantities must be arrays of the same length",
+      });
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     const address = await AddressModel.findById(deliveryAddressId);
     if (!address) {
-      return res.status(404).json({ success: false, message: "Delivery address not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Delivery address not found" });
     }
 
     const isServiceable = await validateAddress(address.pincode);
     if (!isServiceable) {
-      return res.status(400).json({ success: false, message: "Address not serviceable" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Address not serviceable" });
     }
 
     const products = await ProductModel.find({ _id: { $in: productIds } });
     if (products.length !== productIds.length) {
-      return res.status(404).json({ success: false, message: "Some products not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Some products not found" });
     }
 
     const orders = [];
-    const razorpayOrders = [];
+    let grandTotal = 0;
 
     for (let i = 0; i < productIds.length; i++) {
       const productId = productIds[i];
       const quantity = quantities[i];
 
       if (quantity <= 0) {
-        return res.status(400).json({ success: false, message: `Quantity for product ${productId} must be greater than zero` });
+        return res.status(400).json({
+          success: false,
+          message: `Quantity for product ${productId} must be greater than zero`,
+        });
       }
 
-      const product = products.find(p => p._id.toString() === productId);
-      const retailerId = product.createdBy;
-      console.log("product : ",product);
-      console.log("retailerid : ",retailerId);
+      const product = products.find((p) => p._id.toString() === productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product ${productId} not found`,
+        });
+      }
 
+      const retailerId = product.createdBy;
       if (!retailerId) {
-        return res.status(400).json({ success: false, message: `Product ${productId} does not have a creator` });
+        return res.status(400).json({
+          success: false,
+          message: `Product ${productId} does not have a creator`,
+        });
       }
 
       const retailer = await UserModel.findById(retailerId);
       if (!retailer) {
-        return res.status(404).json({ success: false, message: `Invalid retailer for product ${productId}` });
+        return res.status(404).json({
+          success: false,
+          message: `Invalid retailer for product ${productId}`,
+        });
       }
 
-      const orderProducts = [{
-        productId: productId,
-        productTitle: product.name,
-        quantity: quantity,
-        price: product.price,
-        image: product.images[0] || '',
-        sub_total: product.price * quantity
-      }];
+      const orderProducts = [
+        {
+          productId: productId,
+          productTitle: product.name,
+          quantity: quantity,
+          price: product.price,
+          image: product.images?.[0] || "",
+          sub_total: product.price * quantity,
+        },
+      ];
 
       const totalAmt = orderProducts[0].sub_total;
+      grandTotal += totalAmt;
 
-      // Create order
       const order = await OrderModel.create({
         userId,
         products: orderProducts,
@@ -95,77 +129,106 @@ export const createOrderController = async (req, res) => {
         order_status: "pending",
       });
 
-      const razorpayOrder = await razorpay.orders.create({
-        amount: totalAmt * 100,
-        currency: "INR",
-        receipt: order._id.toString(),
-      });
-
-      order.razorpayOrderId = razorpayOrder.id;
-      await order.save();
-
       orders.push(order);
-      razorpayOrders.push(razorpayOrder);
     }
 
+    const razorpayOrder = await razorpay.orders.create({
+      amount: grandTotal * 100, 
+      currency: "INR",
+      receipt: orders[0]._id.toString(),
+      notes: {
+        userId: userId.toString(),
+        orderIds: orders.map((o) => o._id.toString()).join(","),
+      },
+    });
 
-    await sendEmailFun({ 
+    await Promise.all(
+      orders.map((o) => {
+        o.razorpayOrderId = razorpayOrder.id;
+        return o.save();
+      })
+    );
+
+    await sendEmailFun({
       sendTo: user?.email,
-      subject: "Order Confirmation", 
-      text: "", 
-      html: OrderConfirmationEmail(user?.name, orders[0]) 
+      subject: "Order Confirmation",
+      text: "",
+      html: OrderConfirmationEmail(user?.name, orders[0]),
     });
 
     return res.status(200).json({
       success: true,
       orders,
-      razorpayOrders,
+      razorpayOrder, 
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("createOrderController error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Server error" });
   }
 };
 
 
 export const verifyPaymentController = async (req, res) => {
   try {
-    const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const { razorpayPaymentId,razorpayOrderId,razorpaySignature } = req.body;
+
+    if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "razorpayPaymentId, razorpayOrderId and razorpaySignature are required",
+      });
+    }
+
+    const body = `${razorpayOrderId}|${razorpayPaymentId}`;
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body.toString())
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
+    if (expectedSignature !== razorpaySignature) {
       return res.status(400).json({
         success: false,
         message: "Invalid payment signature",
       });
     }
 
-    const order = await OrderModel.findById(orderId);
-    if (!order)
-      return res.status(404).json({ success: false, message: "Order not found" });
+    const orders = await OrderModel.find({
+      razorpayOrderId: razorpayOrderId,
+    });
 
-    order.paymentId = razorpay_payment_id;
-    order.payment_status = "COMPLETED";
-    order.paymentStatus = "SUCCESS";
-    await order.save();
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Orders not found for this payment",
+      });
+    }
+
+    await Promise.all(
+      orders.map((order) => {
+        order.paymentId = razorpayPaymentId;
+        order.payment_status = "COMPLETED";
+        order.paymentStatus = "SUCCESS";
+        return order.save();
+      })
+    );
 
     return res.status(200).json({
       success: true,
       message: "Payment verified successfully",
-      order,
+      orders,
     });
   } catch (err) {
+    console.error("verifyPaymentController error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: err.message || "Server error",
     });
   }
 };
-
 
 export async function getOrderDetailsController(request, response) {
     try {

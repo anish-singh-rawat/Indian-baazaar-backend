@@ -5,7 +5,7 @@ import { createOrderController, deleteOrder, getOrderDetailsController, getTotal
 const orderRouter = Router();
 
 orderRouter.post('/create',auth,createOrderController)
-orderRouter.post("/verify", auth, verifyPaymentController);
+orderRouter.post("/verify-payment", auth, verifyPaymentController);
 orderRouter.get("/order-list",auth,getOrderDetailsController)
 orderRouter.put('/order-status/:id',auth,updateOrderStatusController)
 orderRouter.get('/count',auth,getTotalOrdersCountController)
