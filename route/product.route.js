@@ -4,13 +4,14 @@ import {createProduct, createProductRAMS, deleteMultipleProduct, deleteProduct, 
 
 import { checkRetailerBankDetails } from '../middlewares/checkRetailerBankDetails.js';
 import { removeImageFromCloudinary } from '../controllers/user.controller.js';
+import adminAuth from '../middlewares/adminAuth.js';
 
 const productRouter = Router();
 
-productRouter.post('/uploadImages',  upload.array('images'), uploadImages);
-productRouter.post('/uploadBannerImages',  upload.array('bannerimages'), uploadBannerImages);
+productRouter.post('/uploadImages',adminAuth,  upload.array('images'), uploadImages);
+productRouter.post('/uploadBannerImages', adminAuth,  upload.array('bannerimages'), uploadBannerImages);
 productRouter.post('/create', checkRetailerBankDetails, createProduct);
-productRouter.get('/getAllProducts',  getAllProducts);
+productRouter.get('/getAllProducts', getAllProducts);
 productRouter.get('/getAllProductsBanners', getAllProductsBanners);
 productRouter.get('/getAllProductsByCatId/:id', getAllProductsByCatId);
 productRouter.get('/getAllProductsByCatId', getAllProductsByCat);
@@ -23,11 +24,11 @@ productRouter.get('/getAllProductsByPrice', getAllProductsByPrice);
 productRouter.get('/getAllProductsByRating', getAllProductsByRating);
 productRouter.get('/getAllProductsCount', getProductsCount);
 productRouter.get('/getAllFeaturedProducts', getAllFeaturedProducts);
-productRouter.delete('/deleteMultiple', deleteMultipleProduct);
-productRouter.delete('/:id', deleteProduct);
+productRouter.delete('/deleteMultiple',adminAuth, deleteMultipleProduct);
+productRouter.delete('/:id',adminAuth, deleteProduct);
 productRouter.get('/:id', getProduct);
-productRouter.delete('/deteleImage', removeImageFromCloudinary);
-productRouter.put('/updateProduct/:id', updateProduct);
+productRouter.delete('/deteleImage',adminAuth, removeImageFromCloudinary);
+productRouter.put('/updateProduct/:id',adminAuth, updateProduct);
 
 productRouter.post('/productRAMS/create', createProductRAMS);
 productRouter.delete('/productRAMS/:id', deleteProductRAMS);

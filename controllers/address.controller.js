@@ -22,7 +22,7 @@ export const addAddressController = async (request, response) => {
 
         const savedAddress = await address.save();
 
-        const updateCartUser = await UserModel.updateOne({ _id: userId }, {
+        await UserModel.updateOne({ _id: userId }, {
             $push: {
                 address_details: savedAddress?._id
             }
@@ -64,7 +64,7 @@ export const getAddressController = async (request, response) => {
 
         else {
 
-            const updateUser = await UserModel.updateOne({ _id: request?.query?.userId }, {
+            await UserModel.updateOne({ _id: request?.query?.userId }, {
                 $push: {
                     address: address?._id
                 }
@@ -89,7 +89,7 @@ export const getAddressController = async (request, response) => {
 
 export const deleteAddressController = async (request, response) => {
     try {
-        const userId = request.userId // middleware
+        const userId = request.userId 
         const _id = request.params.id
 
         if(!_id){

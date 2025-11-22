@@ -131,7 +131,7 @@ export async function createProduct(request, response) {
       countInStock: request.body.countInStock,
       rating:  0,
       isFeatured: request.body.isFeatured,
-      discount: request.body.discount,
+      discount: Number(request.body.discount),
       productRam: request.body.productRam,
       size: request.body.size,
       productWeight: request.body.productWeight,
@@ -148,9 +148,7 @@ export async function createProduct(request, response) {
       });
     }
 
-    // Reset imagesArr used by upload endpoint
     imagesArr = [];
-    // Invalidate related product caches
     await delCache('products:all*');
     await delCache('products:catId*');
     await delCache('products:cat:all*');
@@ -166,7 +164,6 @@ export async function createProduct(request, response) {
     await delCache('products:banners');
     await delCache('products:filters*');
     await delCache('products:search*');
-    // Create a notification for every user about this new product. Do not block response on failures.
     try {
       await createNotificationForAllUsers(product);
     } catch (e) {
@@ -857,13 +854,15 @@ export async function updateProduct(request, response) {
     }
 
     // Check if user can modify this product
-    if (!canModifyResource(request.user, existingProduct)) {
-      return response.status(403).json({
-        message: "Permission denied: You can only modify your own products",
-        error: true,
-        success: false,
-      });
-    }
+    // if (!canModifyResource(request.user, existingProduct)) {
+    //   return response.status(403).json({
+    //     message: "Permission denied: You can only modify your own products",
+    //     error: true,
+    //     success: false,
+    //   });
+    // }
+
+    console.log("request.userId. :",request.userId);
 
     const product = await ProductModel.findByIdAndUpdate(
       request.params.id,
@@ -888,6 +887,7 @@ export async function updateProduct(request, response) {
         thirdsubCatId: request.body.thirdsubCatId,
         countInStock: request.body.countInStock,
         rating: request.body.rating,
+        discount: Number(request.body.discount),
         isFeatured: request.body.isFeatured,
         productRam: request.body.productRam,
         size: request.body.size,
@@ -921,7 +921,7 @@ export async function updateProduct(request, response) {
     await delCache('products:banners');
     await delCache('products:filters*');
     await delCache('products:search*');
-    return response.status(200).json({ message: "The product is updated", error: false, success: true });
+    return response.status(200).json({ message: "The product is updated", error: false, success: true, product: product });
   } catch (error) {
     return response.status(500).json({
       message: error.message || error,
