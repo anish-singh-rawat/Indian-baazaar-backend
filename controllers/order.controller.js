@@ -6,92 +6,105 @@ import sendEmailFun from "../config/sendEmail.js";
 import dotenv from 'dotenv';
 import { getCache, setCache, delCache } from '../utils/redisUtil.js';
 import AddressModel from "../models/address.model.js";
+import Razorpay from 'razorpay';
 dotenv.config();
+import crypto from "crypto";
 
-export const createOrderController = async (request, response) => {
-    try {
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
-    const addressId = request.body.delivery_address;
+export const createOrderController = async (req, res) => {
+  try {
+    const { userId, delivery_address, products, totalAmt, retailerId } = req.body;
 
-    if (!addressId) {
-      return response.status(400).json({
-        error: true,
+    if (!delivery_address) {
+      return res.status(400).json({ success: false, message: "Delivery address required" });
+    }
+
+    const address = await AddressModel.findById(delivery_address);
+    if (!address) return res.status(404).json({ success: false, message: "Address not found" });
+
+    const isServiceable = await validateAddress(address.pincode);
+    if (!isServiceable)
+      return res.status(400).json({ success: false, message: "Address not serviceable" });
+
+    const order = await OrderModel.create({
+      userId,
+      products,
+      delivery_address,
+      totalAmt,
+      retailerId,
+      payment_status: "PENDING",
+      order_status: "pending",
+    });
+
+    const razorpayOrder = await razorpay.orders.create({
+      amount: totalAmt * 100,
+      currency: "INR",
+      receipt: order._id.toString(),
+    });
+
+    order.razorpayOrderId = razorpayOrder.id;
+    await order.save();
+    const user = await UserModel.findOne({ _id: userId });
+    await sendEmailFun({ 
+        sendTo: user?.email,
+        subject: "Order Confirmation", 
+        text: "", 
+        html: OrderConfirmationEmail(user?.name, order) 
+    });
+
+    return res.status(200).json({
+      success: true,
+      order,
+      razorpayOrder,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+export const verifyPaymentController = async (req, res) => {
+  try {
+    const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
         success: false,
-        message: "Delivery address ID is required.",
+        message: "Invalid payment signature",
       });
     }
 
-    const addressDetails = await AddressModel.findById(addressId);
+    const order = await OrderModel.findById(orderId);
+    if (!order)
+      return res.status(404).json({ success: false, message: "Order not found" });
 
-    if (!addressDetails) {
-      return response.status(404).json({
-        error: true,
-        success: false,
-        message: "Address not found.",
-      });
-    }
-        const isServiceable = await validateAddress(addressDetails.pincode);
-        console.log("isServiceable : ",isServiceable);
-        if (!isServiceable) {
-            return response.status(400).json({ error: true, success: false, message: 'Delivery address not serviceable by Shiprocket. Please update your address.' });
-        }
+    order.paymentId = razorpay_payment_id;
+    order.payment_status = "COMPLETED";
+    order.paymentStatus = "SUCCESS";
+    await order.save();
 
-        console.log("request.body.products ",request.body.products);
-
-        let order = new OrderModel({
-            userId: request.body.userId,
-            products: request.body.products,
-            paymentId: request.body.paymentId,
-            payment_status: request.body.payment_status,
-            delivery_address: request.body.delivery_address,
-            totalAmt: request.body.totalAmt,
-            date: request.body.date,
-            order_status: 'pending',
-            retailerId : request.body.retailerId,
-        });
-
-        if (!order) {
-            response.status(500).json({
-                error: true,
-                success: false
-            })
-        }
-
-    order = await order.save();
-        // Invalidate order-related cache after creating an order
-        await delCache('order_list');
-        await delCache(`user_order_list_${request.body.userId}`);
-        await delCache('total_orders_count');
-        const user = await UserModel.findOne({ _id: request.body.userId })
-
-        const recipients = [];
-        recipients.push(user?.email);
-
-        // Send verification email
-        await sendEmailFun({
-            sendTo: recipients,
-            subject: "Order Confirmation",
-            text: "",
-            html: OrderConfirmationEmail(user?.name, order)
-        })
-
-
-        return response.status(200).json({
-            error: false,
-            success: true,
-            message: "Order Placed. Awaiting retailer approval.",
-            order: order
-        });
-
-
-    } catch (error) {
-        return response.status(500).json({
-            message: error.message || error,
-            error: true,
-            success: false
-        })
-    }
-}
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified successfully",
+      order,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 
 export async function getOrderDetailsController(request, response) {

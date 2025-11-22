@@ -94,7 +94,7 @@ const checkBlockedIP = async (req, res, next) => {
   next();
 };
 
-app.use(checkBlockedIP);
+// app.use(checkBlockedIP);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -125,7 +125,7 @@ const limiter = rateLimit({
 
 });
 
-app.use(limiter);
+// app.use(limiter);
 
 
 try {

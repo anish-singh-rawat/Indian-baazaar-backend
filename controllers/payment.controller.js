@@ -37,7 +37,7 @@ export const razorpayWebhook = async (req, res) => {
         return res.status(200).json({ success: true });
 
       order.paymentStatus = "SUCCESS";
-      order.razorpayPaymentId = razorpayPaymentId;
+      order.paymentId = razorpayPaymentId;
       await order.save();
 
       await RetailerWallet.findOneAndUpdate(
